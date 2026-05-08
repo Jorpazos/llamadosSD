@@ -951,7 +951,12 @@ header::after {
       <div class="grid2">
         <div class="field">
           <label>Piso</label>
-          <input id="piso" type="text" placeholder="Ej: 1° Piso" autocomplete="off">
+          <div class="field-with-copy">
+            <input id="piso" type="text" placeholder="Ej: 1° Piso" autocomplete="off">
+            <button class="field-copy-btn" onclick="copyField('piso')" title="Copiar">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            </button>
+          </div>
         </div>
         <div class="field">
           <label>Área</label>
@@ -1210,8 +1215,12 @@ async function connectDB() {
     if (pending.length === 0 && done.length === 0) { await saveToDB(); }
     toast("Excel sincronizado con éxito. Actualización en tiempo real activada.");
   } catch (err) {
-    if (err.name !== 'AbortError') {
+    if (err.name === 'AbortError') return;
+    if (err.name === 'NotAllowedError' || err.name === 'SecurityError' || !window.showOpenFilePicker) {
       document.getElementById('braveOverlay').classList.add('open');
+    } else {
+      console.error('Error al conectar Excel:', err);
+      toast(`No se pudo abrir el Excel: ${err.message || err.name}`);
     }
   }
 }
@@ -1305,7 +1314,7 @@ function generateExcelFile() {
 async function saveToDB() {
   if (!dbHandle) {
     toast("⚠️ Necesitás conectar el Excel primero.");
-    return;
+    return false;
   }
   try {
     const wb = generateExcelFile();
@@ -1314,9 +1323,16 @@ async function saveToDB() {
     const writable = await dbHandle.createWritable();
     await writable.write(excelBuffer);
     await writable.close();
+    return true;
   } catch (err) {
-    console.error(err);
-    document.getElementById('braveOverlay').classList.add('open');
+    console.error('Error al guardar en Excel:', err);
+    // Solo mostrar el modal de Brave si es realmente un problema de permisos del navegador
+    if (err.name === 'NotAllowedError' || err.name === 'SecurityError') {
+      document.getElementById('braveOverlay').classList.add('open');
+    } else {
+      toast(`No se pudo guardar: ${err.message || err.name || 'error desconocido'}`);
+    }
+    return false;
   }
 }
 
@@ -1419,8 +1435,8 @@ async function registrar() {
   render();
 
   if (dbHandle) {
-    await saveToDB();
-    toast('Ticket registrado y guardado en el Excel ✓');
+    const ok = await saveToDB();
+    if (ok) toast('Ticket registrado y guardado en el Excel ✓');
   } else {
     toast('⚠️ Guardado en memoria. Conectá el Excel para asegurar datos.');
   }
@@ -1524,7 +1540,10 @@ function openModal(i) {
   html += makeDetailRow('Cliente', r.cliente || r.usuario);
   html += makeDetailRow('Teléfono', r.telefono);
   html += makeDetailRow('Interno', r.interno);
-  html += makeDetailRow('Ubicación', r.ubicacion);
+  html += makeDetailRow('Sede', r.sede);
+  html += makeDetailRow('Piso', r.piso);
+  html += makeDetailRow('Área', r.area);
+  html += makeDetailRow('Oficina/Sector', r.oficina);
   html += makeDetailRow('Equipo', r.equipo);
   html += makeDetailRow('Motivo', r.motivo);
   html += makeDetailRow('Asunto', r.asunto);
@@ -1569,7 +1588,8 @@ function openViewModal(i, type = 'done') {
   html += makeDetailRow('Origen', r.origen);
   if (r.guardiaPasiva) html += makeDetailRow('Guardia Pasiva', 'SÍ');
   html += makeDetailRow('Sede', r.sede);
-  html += makeDetailRow('Ubicación', r.ubicacion);
+  html += makeDetailRow('Piso', r.piso);
+  html += makeDetailRow('Área', r.area);
   html += makeDetailRow('Oficina/Sector', r.oficina);
   html += makeDetailRow('Equipo', r.equipo);
   html += makeDetailRow('Interno', r.interno);
@@ -1609,8 +1629,8 @@ async function confirmTicket() {
   closeModal();
 
   if (dbHandle) {
-    await saveToDB();
-    toast(`Ticket N°${num} actualizado en el Excel ✓`);
+    const ok = await saveToDB();
+    if (ok) toast(`Ticket N°${num} actualizado en el Excel ✓`);
   }
 }
 
@@ -1622,8 +1642,8 @@ async function deleteTicket(type, index) {
   render();
 
   if (dbHandle) {
-    await saveToDB();
-    toast('🗑️ Ticket eliminado del Excel.');
+    const ok = await saveToDB();
+    if (ok) toast('🗑️ Ticket eliminado del Excel.');
   } else {
     toast('🗑️ Ticket eliminado (memoria).');
   }
