@@ -1,0 +1,1211 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Service Desk Logger - Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #111114;
+  --surface: #1c1c21;
+  --surface-raised: #242429;
+  --border: #2e2e35;
+  --border-subtle: #25252b;
+  --text: #e4e4e7;
+  --muted: #8b8b96;
+  --pending: #fbbf24;
+  --done: #34d399;
+  --cloud: #60a5fa;
+  --danger: #ef4444;
+  --mono: 'IBM Plex Mono', monospace;
+  --sans: 'IBM Plex Sans', sans-serif;
+  --radius: 6px;
+  --radius-lg: 10px;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.4);
+  --shadow-lg: 0 12px 40px rgba(0,0,0,0.6);
+  --transition: 0.15s ease;
+}
+
+html, body { height: 100%; overflow: hidden; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 15px;
+  display: grid;
+  grid-template-rows: auto 1fr;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+/* ═══ HEADER ═══ */
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 28px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  position: relative;
+  z-index: 10;
+}
+
+header::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--cloud), transparent);
+  opacity: 0.3;
+}
+
+.h-title {
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text);
+}
+
+.h-title-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px; height: 28px;
+  background: linear-gradient(135deg, var(--cloud), #818cf8);
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.h-clock {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--muted);
+  letter-spacing: 1.5px;
+  background: var(--bg);
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+}
+
+/* ═══ LAYOUT ═══ */
+.layout {
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  height: calc(100vh - 52px);
+  overflow: hidden;
+}
+
+/* ═══ FORM AREA ═══ */
+.form-area {
+  padding: 28px 36px;
+  overflow-y: auto;
+  border-right: 1px solid var(--border);
+}
+
+.section-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 2.5px;
+  color: var(--cloud);
+  text-transform: uppercase;
+  margin-bottom: 22px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.section-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, var(--border), transparent);
+}
+
+.ts-bar {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.ts-bar strong { color: var(--text); }
+
+.field { margin-bottom: 20px; }
+
+.field label {
+  display: block;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.field input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 16px;
+  padding: 8px 0;
+  outline: none;
+  transition: border-color var(--transition);
+  border-radius: 0;
+}
+
+.field input:focus { border-bottom-color: var(--cloud); }
+.field input::placeholder { color: #42424a; font-size: 14px; }
+
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+
+.motivo-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.motivo-chip {
+  padding: 8px 16px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  font-size: 13px;
+  font-family: var(--sans);
+  cursor: pointer;
+  background: var(--surface);
+  color: var(--text);
+  transition: all var(--transition);
+}
+
+.motivo-chip:hover { border-color: var(--cloud); background: rgba(96, 165, 250, 0.08); }
+.motivo-chip.active { background: var(--cloud); color: var(--bg); border-color: var(--cloud); font-weight: 500; }
+
+.motivo-otro { margin-top: 12px; }
+
+.actions { display: flex; gap: 12px; margin-top: 32px; }
+
+.btn {
+  padding: 10px 28px;
+  border-radius: var(--radius);
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  transition: all var(--transition);
+}
+
+.btn-primary {
+  background: var(--cloud);
+  color: var(--bg);
+  border-color: var(--cloud);
+  box-shadow: 0 2px 12px rgba(96, 165, 250, 0.25);
+}
+.btn-primary:hover { opacity: .88; }
+.btn:hover:not(.btn-primary) { border-color: var(--text); background: rgba(255,255,255,0.04); }
+
+/* ═══ SIDEBAR ═══ */
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  overflow: hidden;
+  height: 100%;
+}
+
+/* Pendientes: toma solo el espacio necesario, máx 40% */
+.sidebar-block-pending {
+  display: flex;
+  flex-direction: column;
+  max-height: 40%;
+  min-height: 60px;
+  border-bottom: 1px solid var(--border);
+  overflow: hidden;
+}
+
+/* Cerrados: toma todo el espacio restante */
+.sidebar-block-done {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.sidebar-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  flex-shrink: 0;
+  background: var(--surface-raised);
+  border-bottom: 1px solid var(--border);
+}
+
+.sidebar-head-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: var(--muted);
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px; height: 22px;
+  border-radius: 11px;
+  font-size: 11px;
+  font-family: var(--mono);
+  font-weight: 600;
+  padding: 0 7px;
+}
+
+.badge-pending { background: rgba(251, 191, 36, 0.15); color: var(--pending); }
+.badge-done { background: rgba(52, 211, 153, 0.12); color: var(--done); }
+
+.sidebar-scroll {
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+/* Search Bar - compact */
+.search-bar-container {
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+  flex-shrink: 0;
+}
+.search-input {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 12px;
+  padding: 7px 14px;
+  outline: none;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+.search-input:focus {
+  border-color: var(--cloud);
+  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.12);
+}
+.search-input::placeholder { color: #52525b; font-size: 12px; }
+
+/* Pending rows */
+.pending-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+  transition: background var(--transition);
+}
+.pending-row:hover { background: rgba(251, 191, 36, 0.03); }
+
+.p-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--pending);
+  flex-shrink: 0;
+  box-shadow: 0 0 6px rgba(251, 191, 36, 0.4);
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { box-shadow: 0 0 4px rgba(251, 191, 36, 0.3); }
+  50% { box-shadow: 0 0 10px rgba(251, 191, 36, 0.6); }
+}
+
+.p-info { flex: 1; min-width: 0; }
+
+.p-user {
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 1px;
+}
+
+.p-sub {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.p-time {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+  margin-left: 6px;
+  opacity: 0.7;
+}
+
+.btn-add-ticket {
+  background: transparent;
+  border: 1px solid var(--pending);
+  color: var(--pending);
+  border-radius: 4px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-family: var(--mono);
+  cursor: pointer;
+  transition: background var(--transition);
+  white-space: nowrap;
+}
+.btn-add-ticket:hover { background: rgba(251, 191, 36, 0.1); }
+
+/* Done rows */
+.done-row {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: background var(--transition);
+}
+.done-row:hover { background: rgba(52, 211, 153, 0.03); }
+
+.d-content { flex: 1; min-width: 0; }
+
+.d-user {
+  font-size: 13px;
+  font-weight: 500;
+  display: block;
+  margin-bottom: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.d-ticket {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--done);
+  font-weight: 600;
+}
+
+.d-motivo {
+  font-size: 11px;
+  color: var(--muted);
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.actions-row { display: flex; gap: 4px; flex-shrink: 0; }
+
+.btn-icon {
+  background: transparent;
+  border: 1px solid transparent;
+  padding: 5px;
+  color: var(--muted);
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition);
+}
+
+.btn-icon:hover { background: var(--surface-raised); border-color: var(--border); color: var(--text); }
+
+.btn-delete { color: var(--muted); }
+.btn-delete:hover { background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.3); color: var(--danger); }
+
+.date-header {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--cloud);
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+  background: rgba(96, 165, 250, 0.04);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+/* Export bar */
+.export-bar {
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  flex-shrink: 0;
+}
+
+.btn-exp {
+  width: 100%;
+  padding: 10px;
+  background: var(--done);
+  color: var(--bg);
+  border: none;
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.btn-exp:hover { opacity: 0.9; }
+
+.btn-exp-outline {
+  width: 100%;
+  padding: 10px;
+  background: transparent;
+  color: var(--cloud);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-exp-outline:hover { background: rgba(96, 165, 250, 0.06); border-color: var(--cloud); }
+
+.empty-note {
+  padding: 24px 20px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: #52525b;
+  text-align: center;
+}
+
+/* ═══ MODAL ═══ */
+.overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.75);
+  z-index: 200;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(6px);
+}
+
+.overlay.open { display: flex; }
+
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  width: 420px;
+  box-shadow: var(--shadow-lg);
+  animation: modal-in 0.2s ease-out;
+}
+
+@keyframes modal-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.modal-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+
+.modal-details {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 20px;
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.modal input {
+  width: 100%;
+  border: none;
+  border-bottom: 2px solid var(--border);
+  background: transparent;
+  font-family: var(--mono);
+  font-size: 24px;
+  padding: 6px 0;
+  outline: none;
+  margin-bottom: 22px;
+  color: var(--cloud);
+  letter-spacing: 1px;
+}
+.modal input:focus { border-bottom-color: var(--cloud); }
+
+.modal-actions { display: flex; gap: 12px; }
+
+.btn-copy-small {
+  background: transparent;
+  border: none;
+  color: var(--cloud);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--transition);
+  margin-left: 6px;
+}
+.btn-copy-small:hover { background: rgba(96, 165, 250, 0.15); }
+
+/* Brave Warning */
+.brave-warning {
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  padding: 15px;
+  border-radius: var(--radius);
+  margin-bottom: 20px;
+  font-family: var(--sans);
+  font-size: 13px;
+  color: #fca5a5;
+  line-height: 1.5;
+}
+.brave-warning strong { color: #ef4444; }
+.brave-warning code { background: #000; padding: 2px 6px; border-radius: 4px; color: #fff; }
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(60px);
+  background: var(--surface-raised);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 12px 24px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  transition: transform .26s cubic-bezier(.34,1.56,.64,1);
+  z-index: 999;
+  box-shadow: var(--shadow-md);
+}
+
+.toast.show { transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="h-title">
+    <span class="h-title-icon">🖥</span>
+    Mesa de Ayuda — Logger Pro
+  </div>
+  <span class="h-clock" id="clock">--:--:--</span>
+</header>
+
+<div class="layout">
+
+  <!-- FORM -->
+  <div class="form-area">
+    <div class="ts-bar" id="tsBar">&nbsp;</div>
+    <div class="section-label">Registrar llamado</div>
+
+    <div class="grid2">
+      <div class="field">
+        <label>Interno</label>
+        <input id="interno" type="text" placeholder="EJ: 2807" style="text-transform: uppercase;">
+      </div>
+      <div class="field">
+        <label>Ticket (si ya tenés)</label>
+        <input id="ticket" type="text" placeholder="EJ: 277013" style="text-transform: uppercase;">
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Usuario / Nombre y Apellido</label>
+      <input id="usuario" type="text" placeholder="EJ: JUAN MALDONADO" style="text-transform: uppercase;">
+    </div>
+
+    <div class="grid2">
+      <div class="field">
+        <label>Piso</label>
+        <input id="piso" type="text" placeholder="EJ: 1° PISO" style="text-transform: uppercase;">
+      </div>
+      <div class="field">
+        <label>Área</label>
+        <input id="area" type="text" placeholder="EJ: QUIR 6" style="text-transform: uppercase;">
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Motivo de llamado</label>
+      <div class="motivo-grid" id="motivoGrid">
+        <button class="motivo-chip" onclick="pickMotivo(this)">Usuario Bloqueado</button>
+        <button class="motivo-chip" onclick="pickMotivo(this)">Sin Red</button>
+        <button class="motivo-chip" onclick="pickMotivo(this)">Sin wifi Hua Corp</button>
+        <button class="motivo-chip" onclick="pickMotivo(this)">No enciende PC</button>
+        <button class="motivo-chip" onclick="pickMotivo(this)">PECTRA</button>
+        <button class="motivo-chip" onclick="pickMotivo(this)">otro…</button>
+      </div>
+      <div class="motivo-otro" id="otroWrap" style="display:none">
+        <input id="motivoOtro" type="text" placeholder="DESCRIBIR MOTIVO..." style="text-transform: uppercase;">
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="field">
+        <label>Equipo</label>
+        <input id="equipo" type="text" placeholder="EJ: WSGM12J8G6" style="text-transform: uppercase;">
+      </div>
+      <div class="field">
+        <label>Nota / Observación</label>
+        <input id="nota" type="text" placeholder="EJ: SE DERIVÓ A REDES" style="text-transform: uppercase;">
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-primary" onclick="registrar()">Registrar</button>
+      <button class="btn" onclick="clearForm()">Limpiar</button>
+    </div>
+  </div>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+
+    <!-- PENDIENTES -->
+    <div class="sidebar-block-pending">
+      <div class="sidebar-head">
+        <div class="sidebar-head-label">
+          Pendientes
+          <span class="badge badge-pending" id="pendBadge">0</span>
+        </div>
+      </div>
+      <div class="sidebar-scroll" id="pendList">
+        <div class="empty-note">Sin pendientes.</div>
+      </div>
+    </div>
+
+    <!-- REGISTRADOS -->
+    <div class="sidebar-block-done">
+      <div class="sidebar-head">
+        <div class="sidebar-head-label">
+          Tickets Cerrados
+          <span class="badge badge-done" id="doneBadge">0</span>
+        </div>
+      </div>
+      <!-- BUSCADOR -->
+      <div class="search-bar-container">
+        <input type="text" id="searchInput" class="search-input" placeholder="🔍 Buscar usuario, equipo, ubicación, ticket..." oninput="render()">
+      </div>
+      <div class="sidebar-scroll" id="doneList">
+        <div class="empty-note">Sin registros.</div>
+      </div>
+    </div>
+
+    <!-- EXCEL AREA -->
+    <div class="export-bar">
+      <div id="dbStatus" style="font-size:10px; color:var(--muted); text-align:center; font-family:var(--mono); letter-spacing:0.5px;">
+        🔴 Excel Desconectado
+      </div>
+
+      <button class="btn-exp" id="btnConnect" onclick="connectDB()">
+        📁 Conectar Excel Local
+      </button>
+
+      <button class="btn-exp-outline" onclick="createEmptyExcel()">
+        📄 Crear Excel en Blanco
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL TICKET PENDIENTE -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-label">Cargar número de ticket</div>
+    
+    <div class="modal-details" id="mDetails"></div>
+
+    <input id="mTicket" type="text" placeholder="N° 000000" maxlength="12" style="text-transform: uppercase;">
+    
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="confirmTicket()">Guardar Ticket</button>
+      <button class="btn" onclick="closeModal()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL VER TICKET -->
+<div class="overlay" id="viewOverlay">
+  <div class="modal">
+    <div class="modal-label">Detalles del Ticket</div>
+    
+    <div class="modal-details" id="vDetails"></div>
+    
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="closeViewModal()" style="width: 100%;">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ERROR BRAVE -->
+<div class="overlay" id="braveOverlay">
+  <div class="modal" style="width: 550px;">
+    <div class="modal-label" style="color: #ef4444;">Acceso Bloqueado por Brave</div>
+    
+    <div class="brave-warning">
+      <strong>Problema detectado:</strong> Tu navegador (Brave) bloqueó la conexión directa al archivo local por sus políticas de privacidad.
+      <br><br>
+      Para que la base de datos local funcione, tenés dos caminos:
+      <br><br>
+      <strong>Opción A (La más rápida):</strong><br>
+      Cerrá Brave, andá a tu archivo <code>.html</code>, hacé clic derecho y seleccioná <strong>"Abrir con..." > Google Chrome o Microsoft Edge</strong>.
+      <br><br>
+      <strong>Opción B (Configurar Brave paso a paso):</strong>
+      <ol style="margin-left: 24px; margin-top: 10px; color: var(--text);">
+        <li style="margin-bottom: 8px;">Abrí una pestaña nueva vacía en Brave.</li>
+        <li style="margin-bottom: 8px;">Copiá y pegá esta dirección exacta en la barra de arriba y apretá Enter:<br>
+        <code style="display:inline-block; margin-top:4px;">brave://settings/content/fileSystem</code></li>
+        <li style="margin-bottom: 8px;">En la pantalla que se abre, buscá la sección <strong>"Comportamiento predeterminado"</strong>.</li>
+        <li style="margin-bottom: 8px;">Marcá la burbuja que dice: <strong>"Los sitios pueden pedirte permiso para ver o editar archivos o carpetas en el dispositivo"</strong>.</li>
+        <li>Cerrá esa pestaña de configuración, volvé a esta herramienta y apretá la tecla <strong>F5</strong> para recargarla.</li>
+      </ol>
+    </div>
+    
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="document.getElementById('braveOverlay').classList.remove('open')" style="width: 100%;">Entendido</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let pending = [];
+let done    = [];
+let selMotivo = '';
+let mIdx = null;
+let dbHandle = null; 
+
+function tick() {
+  const now = new Date();
+  const t = now.toLocaleTimeString('es-AR');
+  const d = now.toLocaleDateString('es-AR', {weekday:'short', day:'2-digit', month:'short', year:'numeric'});
+  document.getElementById('clock').textContent = t;
+  document.getElementById('tsBar').innerHTML = `<strong>${d}</strong> &nbsp;&nbsp; ${t}`;
+}
+tick(); setInterval(tick, 1000);
+
+// --- LÓGICA DE EXCEL ESTRICTA ---
+async function connectDB() {
+  if (!window.showOpenFilePicker) {
+    document.getElementById('braveOverlay').classList.add('open');
+    return;
+  }
+  
+  try {
+    [dbHandle] = await window.showOpenFilePicker({
+      types: [{ description: 'Archivo Excel', accept: {'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx']} }],
+      multiple: false
+    });
+    
+    document.getElementById('dbStatus').innerHTML = `🟢 Conectado: ${dbHandle.name}`;
+    document.getElementById('dbStatus').style.color = "var(--done)";
+    document.getElementById('btnConnect').textContent = '🔄 Reconectar Excel';
+    
+    await loadFromDB();
+    if (pending.length === 0 && done.length === 0) { await saveToDB(); }
+    toast("Excel sincronizado con éxito. Actualización en tiempo real activada.");
+  } catch (err) {
+    if (err.name !== 'AbortError') {
+      document.getElementById('braveOverlay').classList.add('open');
+    }
+  }
+}
+
+function parseExcelData(data) {
+  pending = []; done = [];
+  data.forEach(row => {
+    const rec = {
+      fecha: row['Fecha'] || '',
+      interno: row['Interno'] || '',
+      ubicacion: row['Ubicacion'] || '',
+      motivo: row['Motivo de Llamado'] || '',
+      ticket: row['Ticket'] || '',
+      usuario: row['Usuario'] || '',
+      equipo: row['Equipo'] || '',
+      nota: row['Nota'] || '',
+      hora: row['Hora'] || ''
+    };
+    if (!rec.ticket || rec.ticket === '(PENDIENTE)' || rec.ticket === 'PENDIENTE') {
+      pending.push(rec);
+    } else {
+      done.push(rec);
+    }
+  });
+  render();
+}
+
+async function loadFromDB() {
+  if (!dbHandle) return;
+  try {
+    const file = await dbHandle.getFile();
+    const buffer = await file.arrayBuffer();
+    const wb = XLSX.read(buffer, { type: 'array' });
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    parseExcelData(XLSX.utils.sheet_to_json(ws));
+  } catch (err) {
+    toast(`No se pudo leer el Excel: ${err.message}`);
+  }
+}
+
+function generateExcelFile() {
+  const all = [...done, ...pending];
+  const header = ['Fecha', 'Interno', 'Ubicacion', 'Motivo de Llamado', 'Ticket', 'Usuario', 'Equipo', 'Nota', 'Hora'];
+  const rows = all.map(r => [
+    r.fecha, r.interno, r.ubicacion, r.motivo, r.ticket || 'PENDIENTE', r.usuario, r.equipo, r.nota, r.hora
+  ]);
+  
+  const finalData = [header, ...rows];
+  const ws = XLSX.utils.aoa_to_sheet(finalData);
+  ws['!cols'] = [{wch:12},{wch:10},{wch:26},{wch:26},{wch:12},{wch:22},{wch:14},{wch:25},{wch:10}];
+  
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Tickets_DB');
+  return wb;
+}
+
+async function saveToDB() {
+  if (!dbHandle) {
+    toast("⚠️ Necesitás conectar el Excel primero.");
+    return;
+  }
+  try {
+    const wb = generateExcelFile();
+    const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    
+    const writable = await dbHandle.createWritable();
+    await writable.write(excelBuffer);
+    await writable.close();
+  } catch (err) {
+    console.error(err);
+    document.getElementById('braveOverlay').classList.add('open');
+  }
+}
+
+function createEmptyExcel() {
+  const wb = generateExcelFile();
+  const dateStr = new Date().toLocaleDateString('es-AR').replace(/\//g,'-');
+  XLSX.writeFile(wb, `Base_ServiceDesk_${dateStr}.xlsx`);
+  toast("Excel creado. Ahora conectalo usando el botón verde.");
+}
+
+function pickMotivo(el) {
+  document.querySelectorAll('.motivo-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  selMotivo = el.textContent;
+  const isOtro = selMotivo === 'otro…';
+  document.getElementById('otroWrap').style.display = isOtro ? 'block' : 'none';
+  if (isOtro) document.getElementById('motivoOtro').focus();
+}
+
+function getMotivo() {
+  return selMotivo === 'otro…' ? document.getElementById('motivoOtro').value.trim() : selMotivo;
+}
+
+async function registrar() {
+  const usuario = document.getElementById('usuario').value.trim().toUpperCase();
+  const piso = document.getElementById('piso').value.trim().toUpperCase();
+  const area = document.getElementById('area').value.trim().toUpperCase();
+  const motivo = getMotivo().toUpperCase();
+  const ticket = document.getElementById('ticket').value.trim().toUpperCase();
+  const interno = document.getElementById('interno').value.trim().toUpperCase();
+  const equipo = document.getElementById('equipo').value.trim().toUpperCase();
+  const nota = document.getElementById('nota').value.trim().toUpperCase();
+
+  let ubicacion = '';
+  if (piso && area) ubicacion = `${piso} - ${area}`;
+  else if (piso) ubicacion = piso;
+  else if (area) ubicacion = area;
+
+  if (!usuario || !ubicacion || !motivo) {
+    toast('Faltan datos obligatorios (Usuario, Piso/Área, Motivo).');
+    return;
+  }
+
+  const now = new Date();
+  const rec = {
+    interno, ubicacion, motivo, ticket, usuario, equipo, nota,
+    fecha: now.toLocaleDateString('es-AR'),
+    hora: now.toLocaleTimeString('es-AR')
+  };
+
+  if (ticket) done.unshift(rec);
+  else pending.unshift(rec);
+
+  clearForm();
+  render();
+  
+  if (dbHandle) {
+    await saveToDB();
+    toast('Ticket Registrado y Guardado en el Excel ✓');
+  } else {
+    toast('⚠️ Guardado en memoria. Conectá el Excel para asegurar datos.');
+  }
+}
+
+function copyFieldText(btn, text) {
+  const el = document.createElement('textarea');
+  el.value = text;
+  document.body.appendChild(el);
+  el.select();
+  document.execCommand('copy');
+  document.body.removeChild(el);
+  
+  const orig = btn.innerHTML;
+  btn.innerHTML = `<span style="font-size:10px; font-weight:bold; color:var(--done);">OK</span>`;
+  setTimeout(() => btn.innerHTML = orig, 1200);
+}
+
+function makeDetailRow(label, value) {
+  if (!value || value === '-') {
+    return `<div style="display:flex; align-items:center; margin-bottom: 6px;">
+      <strong style="width: 75px; color:var(--muted); font-weight:500;">${label}:</strong> 
+      <span style="color:var(--muted)">-</span>
+    </div>`;
+  }
+  return `<div style="display:flex; align-items:center; margin-bottom: 6px;">
+    <strong style="width: 75px; flex-shrink:0; color:var(--muted); font-weight:500;">${label}:</strong> 
+    <span style="flex:1; word-break: break-word; color:var(--text);">${value}</span>
+    <button class="btn-copy-small" onclick="copyFieldText(this, '${value.replace(/'/g, "\\'")}')" title="Copiar Dato">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+    </button>
+  </div>`;
+}
+
+function openModal(i) {
+  mIdx = i;
+  const r = pending[i];
+  
+  let html = '';
+  html += makeDetailRow('Usuario', r.usuario);
+  html += makeDetailRow('Interno', r.interno);
+  html += makeDetailRow('Ubicación', r.ubicacion);
+  html += makeDetailRow('Equipo', r.equipo);
+  html += makeDetailRow('Motivo', r.motivo);
+
+  if (r.nota) {
+    html += `<div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border);">`;
+    html += makeDetailRow('Nota', r.nota);
+    html += `</div>`;
+  }
+  
+  document.getElementById('mDetails').innerHTML = html;
+  document.getElementById('mTicket').value = '';
+  document.getElementById('overlay').classList.add('open');
+  setTimeout(() => document.getElementById('mTicket').focus(), 100);
+}
+
+function closeModal() {
+  document.getElementById('overlay').classList.remove('open');
+  mIdx = null;
+}
+
+function openViewModal(i, type = 'done') {
+  const r = type === 'pending' ? pending[i] : done[i];
+  
+  let html = `
+    <div style="margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 12px; display:flex; align-items:center;">
+      <strong style="width: 75px; color:var(--muted); font-weight:500;">Ticket N°:</strong> 
+      <span style="color: var(--cloud); font-size: 16px; font-weight: 500; flex:1;">${r.ticket || 'PENDIENTE'}</span>
+      ${r.ticket ? `<button class="btn-copy-small" onclick="copyFieldText(this, '${r.ticket}')" title="Copiar Ticket"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>` : ''}
+    </div>
+  `;
+  
+  html += makeDetailRow('Usuario', r.usuario);
+  html += makeDetailRow('Interno', r.interno);
+  html += makeDetailRow('Ubicación', r.ubicacion);
+  html += makeDetailRow('Equipo', r.equipo);
+  html += makeDetailRow('Motivo', r.motivo);
+  html += makeDetailRow('Fecha', r.fecha);
+  html += makeDetailRow('Hora', r.hora);
+  
+  if (r.nota) {
+    html += `<div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border);">`;
+    html += makeDetailRow('Nota', r.nota);
+    html += `</div>`;
+  }
+  
+  document.getElementById('vDetails').innerHTML = html;
+  document.getElementById('viewOverlay').classList.add('open');
+}
+
+function closeViewModal() {
+  document.getElementById('viewOverlay').classList.remove('open');
+}
+
+async function confirmTicket() {
+  const num = document.getElementById('mTicket').value.trim().toUpperCase();
+  if (!num) return;
+  
+  const rec = { ...pending[mIdx], ticket: num };
+  pending.splice(mIdx, 1);
+  done.unshift(rec);
+  
+  render(); 
+  closeModal();
+  
+  if (dbHandle) {
+    await saveToDB();
+    toast(`Ticket N°${num} actualizado en el Excel ✓`);
+  }
+}
+
+async function deleteTicket(type, index) {
+  if (!confirm('⚠️ ¿Estás seguro de eliminar este ticket?')) return;
+  if (type === 'pending') pending.splice(index, 1);
+  else done.splice(index, 1);
+  
+  render();
+  
+  if (dbHandle) {
+    await saveToDB();
+    toast('🗑️ Ticket eliminado del Excel.');
+  } else {
+    toast('🗑️ Ticket eliminado (memoria).');
+  }
+}
+
+function copyToClipboard(index) {
+  const r = done[index];
+  const notaVal = r.nota ? r.nota : '-';
+  const line = `${r.fecha}\t${r.interno}\t${r.ubicacion}\t${r.motivo}\t${r.ticket}\t${r.usuario}\t${r.equipo}\t${notaVal}\t${r.hora}`;
+  
+  const el = document.createElement('textarea');
+  el.value = line;
+  document.body.appendChild(el);
+  el.select();
+  document.execCommand('copy');
+  document.body.removeChild(el);
+  toast('Fila copiada.');
+}
+
+function render() {
+  document.getElementById('pendBadge').textContent = pending.length;
+  document.getElementById('pendList').innerHTML = pending.length
+    ? pending.map((r, i) => `
+        <div class="pending-row">
+          <div class="p-dot"></div>
+          <div class="p-info">
+            <div class="p-user">${r.usuario}</div>
+            <div class="p-sub">${r.motivo} <span class="p-time">${r.hora.slice(0,5)}</span></div>
+          </div>
+          <div class="actions-row">
+            <button class="btn-icon" onclick="openViewModal(${i}, 'pending')" title="Ver Detalles">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+            </button>
+            <button class="btn-icon btn-delete" onclick="deleteTicket('pending', ${i})" title="Eliminar">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+            </button>
+            <button class="btn-add-ticket" onclick="openModal(${i})">+ ticket</button>
+          </div>
+        </div>`).join('')
+    : '<div class="empty-note">Sin pendientes.</div>';
+
+  const searchInput = document.getElementById('searchInput');
+  const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
+  const hoy = new Date().toLocaleDateString('es-AR');
+
+  const todayDone = done.filter(r => r.fecha === hoy);
+
+  const filteredDone = todayDone.filter(r => 
+    !query || 
+    (r.usuario && r.usuario.toLowerCase().includes(query)) ||
+    (r.equipo && r.equipo.toLowerCase().includes(query)) ||
+    (r.ubicacion && r.ubicacion.toLowerCase().includes(query)) ||
+    (r.ticket && String(r.ticket).toLowerCase().includes(query))
+  );
+
+  document.getElementById('doneBadge').textContent = filteredDone.length !== todayDone.length ? `${filteredDone.length}/${todayDone.length}` : todayDone.length;
+
+  let doneHtml = '';
+  if (filteredDone.length) {
+    doneHtml += `<div class="date-header">📅 HOY — ${hoy}</div>`;
+    doneHtml += filteredDone.map((r) => {
+      const i = done.indexOf(r);
+      return `
+      <div class="done-row">
+        <div class="d-content">
+          <span class="d-user">${r.usuario}</span>
+          <span class="d-motivo"><span class="d-ticket">#${r.ticket}</span> · ${r.motivo}</span>
+        </div>
+        <div class="actions-row">
+          <button class="btn-icon" onclick="openViewModal(${i}, 'done')" title="Ver Detalles">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+          </button>
+          <button class="btn-icon" onclick="copyToClipboard(${i})" title="Copiar Fila">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
+          </button>
+          <button class="btn-icon btn-delete" onclick="deleteTicket('done', ${i})" title="Eliminar Ticket">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+          </button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+  
+  document.getElementById('doneList').innerHTML = filteredDone.length 
+    ? doneHtml 
+    : (todayDone.length ? '<div class="empty-note">No se encontraron resultados en tu búsqueda.</div>' : '<div class="empty-note">Sin tickets completados hoy.</div>');
+}
+
+function clearForm() {
+  ['interno','ticket','usuario','piso','area','equipo','nota','motivoOtro'].forEach(id =>
+    document.getElementById(id).value = '');
+  document.querySelectorAll('.motivo-chip').forEach(c => c.classList.remove('active'));
+  selMotivo = '';
+  document.getElementById('otroWrap').style.display = 'none';
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+render();
+</script>
+</body>
+</html>
