@@ -4,31 +4,38 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Service Desk Logger - Pro</title>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg: #111114;
+  --bg: #0e0e12;
+  --bg-soft: #14141a;
   --surface: #1c1c21;
   --surface-raised: #242429;
+  --surface-hover: #2a2a31;
   --border: #2e2e35;
+  --border-strong: #3a3a44;
   --border-subtle: #25252b;
   --text: #e4e4e7;
+  --text-soft: #c1c1c8;
   --muted: #8b8b96;
+  --muted-soft: #6a6a75;
   --pending: #fbbf24;
   --done: #34d399;
   --cloud: #60a5fa;
+  --cloud-soft: rgba(96, 165, 250, 0.12);
+  --indigo: #818cf8;
   --danger: #ef4444;
   --mono: 'IBM Plex Mono', monospace;
   --sans: 'IBM Plex Sans', sans-serif;
-  --radius: 6px;
-  --radius-lg: 10px;
+  --radius: 8px;
+  --radius-lg: 12px;
   --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
   --shadow-md: 0 4px 16px rgba(0,0,0,0.4);
   --shadow-lg: 0 12px 40px rgba(0,0,0,0.6);
-  --transition: 0.15s ease;
+  --transition: 0.18s ease;
 }
 
 html, body { height: 100%; overflow: hidden; }
@@ -37,16 +44,16 @@ body {
   background: var(--bg);
   color: var(--text);
   font-family: var(--sans);
-  font-size: 15px;
+  font-size: 14px;
   display: grid;
   grid-template-rows: auto 1fr;
 }
 
 /* Scrollbar */
-::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
-::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+::-webkit-scrollbar-thumb:hover { background: var(--muted-soft); }
 
 /* ═══ HEADER ═══ */
 header {
@@ -67,18 +74,18 @@ header::after {
   left: 0; right: 0;
   height: 1px;
   background: linear-gradient(90deg, transparent, var(--cloud), transparent);
-  opacity: 0.3;
+  opacity: 0.4;
 }
 
 .h-title {
   font-family: var(--mono);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
-  letter-spacing: 1.5px;
+  letter-spacing: 1.8px;
   text-transform: uppercase;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   color: var(--text);
 }
 
@@ -86,10 +93,11 @@ header::after {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px; height: 28px;
-  background: linear-gradient(135deg, var(--cloud), #818cf8);
-  border-radius: 6px;
+  width: 30px; height: 30px;
+  background: linear-gradient(135deg, var(--cloud), var(--indigo));
+  border-radius: 7px;
   font-size: 14px;
+  box-shadow: 0 4px 12px rgba(96, 165, 250, 0.25);
 }
 
 .h-clock {
@@ -107,27 +115,29 @@ header::after {
 .layout {
   display: grid;
   grid-template-columns: 1fr 400px;
-  height: calc(100vh - 52px);
+  height: calc(100vh - 56px);
   overflow: hidden;
 }
 
 /* ═══ FORM AREA ═══ */
 .form-area {
-  padding: 28px 36px;
+  padding: 24px 32px 32px;
   overflow-y: auto;
   border-right: 1px solid var(--border);
+  background: linear-gradient(180deg, var(--bg) 0%, var(--bg-soft) 100%);
 }
 
 .section-label {
   font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 2.5px;
+  font-size: 10px;
+  letter-spacing: 2.2px;
   color: var(--cloud);
   text-transform: uppercase;
-  margin-bottom: 22px;
+  margin-bottom: 14px;
   display: flex;
   align-items: center;
   gap: 10px;
+  font-weight: 500;
 }
 
 .section-label::after {
@@ -139,93 +149,277 @@ header::after {
 
 .ts-bar {
   font-family: var(--mono);
-  font-size: 13px;
+  font-size: 12px;
   color: var(--muted);
-  margin-bottom: 24px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid var(--border-subtle);
+  margin-bottom: 18px;
+  padding: 10px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  letter-spacing: 0.5px;
 }
 
-.ts-bar strong { color: var(--text); }
+.ts-bar strong { color: var(--text); font-weight: 500; }
+.ts-bar::before {
+  content: '';
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--done);
+  box-shadow: 0 0 8px rgba(52, 211, 153, 0.6);
+  animation: pulse-dot 2s ease-in-out infinite;
+}
 
-.field { margin-bottom: 20px; }
+/* Card sections */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 18px 20px;
+  margin-bottom: 16px;
+  transition: border-color var(--transition);
+}
+
+.card:hover { border-color: var(--border); }
+
+.card-title {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 14px;
+  font-weight: 500;
+}
+
+.field { margin-bottom: 14px; }
+.field:last-child { margin-bottom: 0; }
 
 .field label {
   display: block;
   font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 1.5px;
+  font-size: 10px;
+  letter-spacing: 1.4px;
   color: var(--muted);
   text-transform: uppercase;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
+  font-weight: 500;
 }
 
-.field input {
+.field input,
+.field select,
+.field textarea {
   width: 100%;
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 14px;
+  padding: 9px 12px;
+  outline: none;
+  transition: all var(--transition);
+  border-radius: var(--radius);
+}
+
+.field input:hover,
+.field select:hover,
+.field textarea:hover {
+  border-color: var(--border-strong);
+  background: var(--surface);
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  border-color: var(--cloud);
+  background: var(--surface);
+  box-shadow: 0 0 0 3px var(--cloud-soft);
+}
+
+.field input::placeholder,
+.field textarea::placeholder {
+  color: var(--muted-soft);
+  font-size: 13px;
+}
+
+.field textarea {
+  resize: vertical;
+  min-height: 70px;
+  font-family: var(--sans);
+  line-height: 1.5;
+}
+
+.field select {
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238b8b96' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 32px;
+  cursor: pointer;
+}
+
+.field-with-copy {
+  position: relative;
+}
+
+.field-with-copy input {
+  padding-right: 38px;
+}
+
+.field-copy-btn {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
   background: transparent;
   border: none;
-  border-bottom: 1px solid var(--border);
-  color: var(--text);
-  font-family: var(--sans);
-  font-size: 16px;
-  padding: 8px 0;
-  outline: none;
-  transition: border-color var(--transition);
-  border-radius: 0;
-}
-
-.field input:focus { border-bottom-color: var(--cloud); }
-.field input::placeholder { color: #42424a; font-size: 14px; }
-
-.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
-
-.motivo-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 8px;
-}
-
-.motivo-chip {
-  padding: 8px 16px;
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  font-size: 13px;
-  font-family: var(--sans);
+  color: var(--muted-soft);
   cursor: pointer;
-  background: var(--surface);
-  color: var(--text);
+  padding: 6px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: all var(--transition);
 }
 
-.motivo-chip:hover { border-color: var(--cloud); background: rgba(96, 165, 250, 0.08); }
-.motivo-chip.active { background: var(--cloud); color: var(--bg); border-color: var(--cloud); font-weight: 500; }
+.field-copy-btn:hover {
+  background: var(--cloud-soft);
+  color: var(--cloud);
+}
 
-.motivo-otro { margin-top: 12px; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
 
-.actions { display: flex; gap: 12px; margin-top: 32px; }
+/* Chips */
+.chip-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip {
+  padding: 6px 14px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  font-size: 12px;
+  font-family: var(--sans);
+  cursor: pointer;
+  background: var(--bg-soft);
+  color: var(--text-soft);
+  transition: all var(--transition);
+  font-weight: 400;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.chip:hover { border-color: var(--cloud); background: var(--cloud-soft); color: var(--text); }
+.chip.active {
+  background: linear-gradient(135deg, var(--cloud), var(--indigo));
+  color: #fff;
+  border-color: var(--cloud);
+  font-weight: 500;
+  box-shadow: 0 2px 10px rgba(96, 165, 250, 0.3);
+}
+
+.chip.priority-baja.active { background: linear-gradient(135deg, #34d399, #10b981); border-color: #34d399; box-shadow: 0 2px 10px rgba(52,211,153,0.3); }
+.chip.priority-media.active { background: linear-gradient(135deg, #fbbf24, #f59e0b); border-color: #fbbf24; box-shadow: 0 2px 10px rgba(251,191,36,0.3); color: #1a1a1a; }
+.chip.priority-alta.active { background: linear-gradient(135deg, #fb923c, #f97316); border-color: #fb923c; box-shadow: 0 2px 10px rgba(251,146,60,0.3); }
+.chip.priority-urgente.active { background: linear-gradient(135deg, #ef4444, #dc2626); border-color: #ef4444; box-shadow: 0 2px 10px rgba(239,68,68,0.3); }
+
+.motivo-otro { margin-top: 10px; }
+
+/* Checkbox */
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+  padding: 8px 0;
+}
+
+.checkbox-box {
+  width: 18px;
+  height: 18px;
+  border: 1.5px solid var(--border-strong);
+  border-radius: 4px;
+  background: var(--bg-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition);
+  flex-shrink: 0;
+}
+
+.checkbox-row:hover .checkbox-box { border-color: var(--cloud); }
+
+.checkbox-row.checked .checkbox-box {
+  background: var(--cloud);
+  border-color: var(--cloud);
+}
+
+.checkbox-row.checked .checkbox-box::after {
+  content: '';
+  width: 6px; height: 10px;
+  border: 2px solid white;
+  border-top: 0;
+  border-left: 0;
+  transform: rotate(45deg) translate(-1px, -1px);
+}
+
+.checkbox-row span {
+  font-size: 13px;
+  color: var(--text-soft);
+}
+
+/* Actions */
+.actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 22px;
+  flex-wrap: wrap;
+}
 
 .btn {
-  padding: 10px 28px;
+  padding: 10px 22px;
   border-radius: var(--radius);
   font-family: var(--sans);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   cursor: pointer;
   border: 1px solid var(--border);
   background: var(--surface);
   color: var(--text);
   transition: all var(--transition);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  letter-spacing: 0.3px;
 }
 
 .btn-primary {
-  background: var(--cloud);
-  color: var(--bg);
-  border-color: var(--cloud);
-  box-shadow: 0 2px 12px rgba(96, 165, 250, 0.25);
+  background: linear-gradient(135deg, var(--cloud), var(--indigo));
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 4px 14px rgba(96, 165, 250, 0.3);
 }
-.btn-primary:hover { opacity: .88; }
-.btn:hover:not(.btn-primary) { border-color: var(--text); background: rgba(255,255,255,0.04); }
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(96, 165, 250, 0.4); }
+
+.btn-copy {
+  background: rgba(52, 211, 153, 0.1);
+  color: var(--done);
+  border-color: rgba(52, 211, 153, 0.3);
+}
+.btn-copy:hover { background: rgba(52, 211, 153, 0.18); border-color: var(--done); }
+
+.btn:hover:not(.btn-primary):not(.btn-copy) {
+  border-color: var(--text-soft);
+  background: var(--surface-hover);
+}
 
 /* ═══ SIDEBAR ═══ */
 .sidebar {
@@ -236,7 +430,6 @@ header::after {
   height: 100%;
 }
 
-/* Pendientes: toma solo el espacio necesario, máx 40% */
 .sidebar-block-pending {
   display: flex;
   flex-direction: column;
@@ -246,7 +439,6 @@ header::after {
   overflow: hidden;
 }
 
-/* Cerrados: toma todo el espacio restante */
 .sidebar-block-done {
   display: flex;
   flex-direction: column;
@@ -274,6 +466,7 @@ header::after {
   display: flex;
   align-items: center;
   gap: 10px;
+  font-weight: 500;
 }
 
 .badge {
@@ -297,7 +490,6 @@ header::after {
   min-height: 0;
 }
 
-/* Search Bar - compact */
 .search-bar-container {
   padding: 8px 14px;
   border-bottom: 1px solid var(--border);
@@ -318,11 +510,10 @@ header::after {
 }
 .search-input:focus {
   border-color: var(--cloud);
-  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.12);
+  box-shadow: 0 0 0 2px var(--cloud-soft);
 }
-.search-input::placeholder { color: #52525b; font-size: 12px; }
+.search-input::placeholder { color: var(--muted-soft); font-size: 12px; }
 
-/* Pending rows */
 .pending-row {
   display: flex;
   align-items: center;
@@ -331,7 +522,7 @@ header::after {
   border-bottom: 1px solid var(--border-subtle);
   transition: background var(--transition);
 }
-.pending-row:hover { background: rgba(251, 191, 36, 0.03); }
+.pending-row:hover { background: rgba(251, 191, 36, 0.04); }
 
 .p-dot {
   width: 7px; height: 7px;
@@ -343,8 +534,8 @@ header::after {
 }
 
 @keyframes pulse-dot {
-  0%, 100% { box-shadow: 0 0 4px rgba(251, 191, 36, 0.3); }
-  50% { box-shadow: 0 0 10px rgba(251, 191, 36, 0.6); }
+  0%, 100% { box-shadow: 0 0 4px rgba(251, 191, 36, 0.3); opacity: 0.9; }
+  50% { box-shadow: 0 0 10px rgba(251, 191, 36, 0.6); opacity: 1; }
 }
 
 .p-info { flex: 1; min-width: 0; }
@@ -382,10 +573,10 @@ header::after {
   cursor: pointer;
   transition: background var(--transition);
   white-space: nowrap;
+  font-weight: 500;
 }
-.btn-add-ticket:hover { background: rgba(251, 191, 36, 0.1); }
+.btn-add-ticket:hover { background: rgba(251, 191, 36, 0.12); }
 
-/* Done rows */
 .done-row {
   padding: 10px 16px;
   border-bottom: 1px solid var(--border-subtle);
@@ -394,7 +585,7 @@ header::after {
   gap: 10px;
   transition: background var(--transition);
 }
-.done-row:hover { background: rgba(52, 211, 153, 0.03); }
+.done-row:hover { background: rgba(52, 211, 153, 0.04); }
 
 .d-content { flex: 1; min-width: 0; }
 
@@ -450,7 +641,7 @@ header::after {
   color: var(--cloud);
   padding: 8px 16px;
   border-bottom: 1px solid var(--border-subtle);
-  background: rgba(96, 165, 250, 0.04);
+  background: var(--cloud-soft);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 1.5px;
@@ -459,7 +650,6 @@ header::after {
   z-index: 2;
 }
 
-/* Export bar */
 .export-bar {
   padding: 14px 16px;
   display: flex;
@@ -496,13 +686,13 @@ header::after {
   cursor: pointer;
   transition: all 0.2s;
 }
-.btn-exp-outline:hover { background: rgba(96, 165, 250, 0.06); border-color: var(--cloud); }
+.btn-exp-outline:hover { background: var(--cloud-soft); border-color: var(--cloud); }
 
 .empty-note {
   padding: 24px 20px;
   font-family: var(--mono);
   font-size: 12px;
-  color: #52525b;
+  color: var(--muted-soft);
   text-align: center;
 }
 
@@ -525,9 +715,12 @@ header::after {
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: 28px;
-  width: 420px;
+  width: 460px;
+  max-width: 92vw;
+  max-height: 90vh;
+  overflow-y: auto;
   box-shadow: var(--shadow-lg);
-  animation: modal-in 0.2s ease-out;
+  animation: modal-in 0.22s ease-out;
 }
 
 @keyframes modal-in {
@@ -542,6 +735,7 @@ header::after {
   color: var(--muted);
   text-transform: uppercase;
   margin-bottom: 16px;
+  font-weight: 500;
 }
 
 .modal-details {
@@ -585,7 +779,7 @@ header::after {
   transition: background var(--transition);
   margin-left: 6px;
 }
-.btn-copy-small:hover { background: rgba(96, 165, 250, 0.15); }
+.btn-copy-small:hover { background: var(--cloud-soft); }
 
 /* Brave Warning */
 .brave-warning {
@@ -619,9 +813,28 @@ header::after {
   transition: transform .26s cubic-bezier(.34,1.56,.64,1);
   z-index: 999;
   box-shadow: var(--shadow-md);
+  max-width: 90vw;
+  text-align: center;
 }
 
 .toast.show { transform: translateX(-50%) translateY(0); }
+
+/* Paste preview area */
+.paste-preview {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text-soft);
+  line-height: 1.7;
+  margin-bottom: 16px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 360px;
+  overflow-y: auto;
+}
 </style>
 </head>
 <body>
@@ -639,71 +852,204 @@ header::after {
   <!-- FORM -->
   <div class="form-area">
     <div class="ts-bar" id="tsBar">&nbsp;</div>
-    <div class="section-label">Registrar llamado</div>
 
-    <div class="grid2">
-      <div class="field">
-        <label>Interno</label>
-        <input id="interno" type="text" placeholder="EJ: 2807" style="text-transform: uppercase;">
-      </div>
-      <div class="field">
-        <label>Ticket (si ya tenés)</label>
-        <input id="ticket" type="text" placeholder="EJ: 277013" style="text-transform: uppercase;">
+    <!-- SECCION CLIENTE -->
+    <div class="card">
+      <div class="card-title">👤 Cliente</div>
+      <div class="grid2">
+        <div class="field">
+          <label>Cliente / Nombre y Apellido</label>
+          <div class="field-with-copy">
+            <input id="cliente" type="text" placeholder="Ej: Jorge Javier Pazos" autocomplete="off">
+            <button class="field-copy-btn" onclick="copyField('cliente')" title="Copiar">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            </button>
+          </div>
+        </div>
+        <div class="field">
+          <label>Teléfono de Contacto</label>
+          <div class="field-with-copy">
+            <input id="telefono" type="text" placeholder="Ej: 11-2345-6789" autocomplete="off">
+            <button class="field-copy-btn" onclick="copyField('telefono')" title="Copiar">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
 
-    <div class="field">
-      <label>Usuario / Nombre y Apellido</label>
-      <input id="usuario" type="text" placeholder="EJ: JUAN MALDONADO" style="text-transform: uppercase;">
+    <!-- SECCION CLASIFICACION -->
+    <div class="card">
+      <div class="card-title">🏷 Clasificación</div>
+
+      <div class="grid2">
+        <div class="field">
+          <label>Tipo</label>
+          <select id="tipo">
+            <option value="Incidente">Incidente</option>
+            <option value="Solicitud">Solicitud</option>
+            <option value="Pregunta">Pregunta</option>
+            <option value="Problema">Problema</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Origen</label>
+          <div class="chip-grid" id="origenGrid">
+            <button class="chip" data-origen="Web" onclick="pickOrigen(this)">🌐 Web</button>
+            <button class="chip" data-origen="Teléfono" onclick="pickOrigen(this)">📞 Teléfono</button>
+            <button class="chip" data-origen="Correo" onclick="pickOrigen(this)">✉ Correo</button>
+            <button class="chip" data-origen="IM" onclick="pickOrigen(this)">💬 IM</button>
+            <button class="chip" data-origen="En persona" onclick="pickOrigen(this)">🤝 En persona</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Prioridad</label>
+        <div class="chip-grid" id="prioridadGrid">
+          <button class="chip priority-baja" data-prioridad="Baja" onclick="pickPrioridad(this)">Baja</button>
+          <button class="chip priority-media" data-prioridad="Media" onclick="pickPrioridad(this)">Media</button>
+          <button class="chip priority-alta" data-prioridad="Alta" onclick="pickPrioridad(this)">Alta</button>
+          <button class="chip priority-urgente" data-prioridad="Urgente" onclick="pickPrioridad(this)">Urgente</button>
+        </div>
+      </div>
+
+      <div class="field" style="margin-top: 4px;">
+        <div class="checkbox-row" id="guardiaPasivaRow" onclick="toggleGuardia()">
+          <div class="checkbox-box"></div>
+          <span>Guardia Pasiva</span>
+        </div>
+      </div>
     </div>
 
-    <div class="grid2">
-      <div class="field">
-        <label>Piso</label>
-        <input id="piso" type="text" placeholder="EJ: 1° PISO" style="text-transform: uppercase;">
+    <!-- SECCION UBICACION -->
+    <div class="card">
+      <div class="card-title">📍 Ubicación</div>
+
+      <div class="grid2">
+        <div class="field">
+          <label>Sede</label>
+          <select id="sede">
+            <option value="">Seleccione una opción</option>
+            <option value="Sede Central">Sede Central</option>
+            <option value="Sede Norte">Sede Norte</option>
+            <option value="Sede Sur">Sede Sur</option>
+            <option value="Otra">Otra</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Oficina / Sector</label>
+          <div class="field-with-copy">
+            <input id="oficina" type="text" placeholder="Ej: 1° Piso. Al fondo" autocomplete="off">
+            <button class="field-copy-btn" onclick="copyField('oficina')" title="Copiar">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            </button>
+          </div>
+        </div>
       </div>
-      <div class="field">
-        <label>Área</label>
-        <input id="area" type="text" placeholder="EJ: QUIR 6" style="text-transform: uppercase;">
+
+      <div class="grid2">
+        <div class="field">
+          <label>Piso</label>
+          <input id="piso" type="text" placeholder="Ej: 1° Piso" autocomplete="off">
+        </div>
+        <div class="field">
+          <label>Área</label>
+          <div class="field-with-copy">
+            <input id="area" type="text" placeholder="Ej: Quirófano" autocomplete="off">
+            <button class="field-copy-btn" onclick="copyField('area')" title="Copiar">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
 
-    <div class="field">
-      <label>Motivo de llamado</label>
-      <div class="motivo-grid" id="motivoGrid">
-        <button class="motivo-chip" onclick="pickMotivo(this)">Usuario Bloqueado</button>
-        <button class="motivo-chip" onclick="pickMotivo(this)">Sin Red</button>
-        <button class="motivo-chip" onclick="pickMotivo(this)">Sin wifi Hua Corp</button>
-        <button class="motivo-chip" onclick="pickMotivo(this)">No enciende PC</button>
-        <button class="motivo-chip" onclick="pickMotivo(this)">PECTRA</button>
-        <button class="motivo-chip" onclick="pickMotivo(this)">otro…</button>
-      </div>
-      <div class="motivo-otro" id="otroWrap" style="display:none">
-        <input id="motivoOtro" type="text" placeholder="DESCRIBIR MOTIVO..." style="text-transform: uppercase;">
+    <!-- SECCION EQUIPO -->
+    <div class="card">
+      <div class="card-title">💻 Equipo</div>
+      <div class="grid2">
+        <div class="field">
+          <label>Nombre de Equipo</label>
+          <div class="field-with-copy">
+            <input id="equipo" type="text" placeholder="Ej: WSGM12J8G6" autocomplete="off">
+            <button class="field-copy-btn" onclick="copyField('equipo')" title="Copiar">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            </button>
+          </div>
+        </div>
+        <div class="field">
+          <label>Interno</label>
+          <input id="interno" type="text" placeholder="Ej: 2807" autocomplete="off">
+        </div>
       </div>
     </div>
 
-    <div class="grid2">
+    <!-- SECCION LLAMADO -->
+    <div class="card">
+      <div class="card-title">📝 Llamado</div>
+
       <div class="field">
-        <label>Equipo</label>
-        <input id="equipo" type="text" placeholder="EJ: WSGM12J8G6" style="text-transform: uppercase;">
+        <label>Motivo de llamado</label>
+        <div class="chip-grid" id="motivoGrid">
+          <button class="chip" onclick="pickMotivo(this)">Usuario Bloqueado</button>
+          <button class="chip" onclick="pickMotivo(this)">Sin Red</button>
+          <button class="chip" onclick="pickMotivo(this)">Sin wifi Hua Corp</button>
+          <button class="chip" onclick="pickMotivo(this)">No enciende PC</button>
+          <button class="chip" onclick="pickMotivo(this)">PECTRA</button>
+          <button class="chip" onclick="pickMotivo(this)">otro…</button>
+        </div>
+        <div class="motivo-otro" id="otroWrap" style="display:none">
+          <input id="motivoOtro" type="text" placeholder="Describir motivo...">
+        </div>
       </div>
+
       <div class="field">
-        <label>Nota / Observación</label>
-        <input id="nota" type="text" placeholder="EJ: SE DERIVÓ A REDES" style="text-transform: uppercase;">
+        <label>Asunto</label>
+        <div class="field-with-copy">
+          <input id="asunto" type="text" placeholder="Ej: No conecta Pectra" autocomplete="off">
+          <button class="field-copy-btn" onclick="copyField('asunto')" title="Copiar">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Descripción</label>
+        <textarea id="descripcion" placeholder="Ej: No se puede iniciar sesión en Pectra"></textarea>
+      </div>
+
+      <div class="grid2">
+        <div class="field">
+          <label>Ticket (si ya tenés)</label>
+          <input id="ticket" type="text" placeholder="Ej: 277013" autocomplete="off">
+        </div>
+        <div class="field">
+          <label>Nota / Observación</label>
+          <input id="nota" type="text" placeholder="Ej: Se derivó a redes" autocomplete="off">
+        </div>
       </div>
     </div>
 
     <div class="actions">
-      <button class="btn btn-primary" onclick="registrar()">Registrar</button>
-      <button class="btn" onclick="clearForm()">Limpiar</button>
+      <button class="btn btn-primary" onclick="registrar()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        Registrar
+      </button>
+      <button class="btn btn-copy" onclick="openCopyModal()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        Copiar Todo
+      </button>
+      <button class="btn" onclick="clearForm()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+        Limpiar
+      </button>
     </div>
   </div>
 
   <!-- SIDEBAR -->
   <div class="sidebar">
 
-    <!-- PENDIENTES -->
     <div class="sidebar-block-pending">
       <div class="sidebar-head">
         <div class="sidebar-head-label">
@@ -716,7 +1062,6 @@ header::after {
       </div>
     </div>
 
-    <!-- REGISTRADOS -->
     <div class="sidebar-block-done">
       <div class="sidebar-head">
         <div class="sidebar-head-label">
@@ -724,7 +1069,6 @@ header::after {
           <span class="badge badge-done" id="doneBadge">0</span>
         </div>
       </div>
-      <!-- BUSCADOR -->
       <div class="search-bar-container">
         <input type="text" id="searchInput" class="search-input" placeholder="🔍 Buscar usuario, equipo, ubicación, ticket..." oninput="render()">
       </div>
@@ -733,7 +1077,6 @@ header::after {
       </div>
     </div>
 
-    <!-- EXCEL AREA -->
     <div class="export-bar">
       <div id="dbStatus" style="font-size:10px; color:var(--muted); text-align:center; font-family:var(--mono); letter-spacing:0.5px;">
         🔴 Excel Desconectado
@@ -754,11 +1097,8 @@ header::after {
 <div class="overlay" id="overlay">
   <div class="modal">
     <div class="modal-label">Cargar número de ticket</div>
-    
     <div class="modal-details" id="mDetails"></div>
-
-    <input id="mTicket" type="text" placeholder="N° 000000" maxlength="12" style="text-transform: uppercase;">
-    
+    <input id="mTicket" type="text" placeholder="N° 000000" maxlength="12">
     <div class="modal-actions">
       <button class="btn btn-primary" onclick="confirmTicket()">Guardar Ticket</button>
       <button class="btn" onclick="closeModal()">Cancelar</button>
@@ -770,11 +1110,24 @@ header::after {
 <div class="overlay" id="viewOverlay">
   <div class="modal">
     <div class="modal-label">Detalles del Ticket</div>
-    
     <div class="modal-details" id="vDetails"></div>
-    
     <div class="modal-actions">
       <button class="btn btn-primary" onclick="closeViewModal()" style="width: 100%;">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL COPIAR TODO -->
+<div class="overlay" id="copyOverlay">
+  <div class="modal" style="width: 540px;">
+    <div class="modal-label">Texto listo para copiar y pegar</div>
+    <div class="paste-preview" id="copyPreview"></div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="copyAllText()" style="flex:1">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        Copiar al Portapapeles
+      </button>
+      <button class="btn" onclick="closeCopyModal()">Cerrar</button>
     </div>
   </div>
 </div>
@@ -783,7 +1136,6 @@ header::after {
 <div class="overlay" id="braveOverlay">
   <div class="modal" style="width: 550px;">
     <div class="modal-label" style="color: #ef4444;">Acceso Bloqueado por Brave</div>
-    
     <div class="brave-warning">
       <strong>Problema detectado:</strong> Tu navegador (Brave) bloqueó la conexión directa al archivo local por sus políticas de privacidad.
       <br><br>
@@ -802,7 +1154,6 @@ header::after {
         <li>Cerrá esa pestaña de configuración, volvé a esta herramienta y apretá la tecla <strong>F5</strong> para recargarla.</li>
       </ol>
     </div>
-    
     <div class="modal-actions">
       <button class="btn btn-primary" onclick="document.getElementById('braveOverlay').classList.remove('open')" style="width: 100%;">Entendido</button>
     </div>
@@ -815,17 +1166,28 @@ header::after {
 let pending = [];
 let done    = [];
 let selMotivo = '';
+let selOrigen = 'Web';
+let selPrioridad = 'Baja';
+let guardiaPasiva = false;
 let mIdx = null;
-let dbHandle = null; 
+let dbHandle = null;
 
 function tick() {
   const now = new Date();
   const t = now.toLocaleTimeString('es-AR');
   const d = now.toLocaleDateString('es-AR', {weekday:'short', day:'2-digit', month:'short', year:'numeric'});
   document.getElementById('clock').textContent = t;
-  document.getElementById('tsBar').innerHTML = `<strong>${d}</strong> &nbsp;&nbsp; ${t}`;
+  document.getElementById('tsBar').innerHTML = `<strong>${d}</strong> &nbsp;·&nbsp; ${t}`;
 }
 tick(); setInterval(tick, 1000);
+
+// Defaults: Web origin and Baja priority preselected
+window.addEventListener('DOMContentLoaded', () => {
+  const webChip = document.querySelector('#origenGrid [data-origen="Web"]');
+  if (webChip) webChip.classList.add('active');
+  const bajaChip = document.querySelector('#prioridadGrid [data-prioridad="Baja"]');
+  if (bajaChip) bajaChip.classList.add('active');
+});
 
 // --- LÓGICA DE EXCEL ESTRICTA ---
 async function connectDB() {
@@ -833,17 +1195,17 @@ async function connectDB() {
     document.getElementById('braveOverlay').classList.add('open');
     return;
   }
-  
+
   try {
     [dbHandle] = await window.showOpenFilePicker({
       types: [{ description: 'Archivo Excel', accept: {'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx']} }],
       multiple: false
     });
-    
+
     document.getElementById('dbStatus').innerHTML = `🟢 Conectado: ${dbHandle.name}`;
     document.getElementById('dbStatus').style.color = "var(--done)";
     document.getElementById('btnConnect').textContent = '🔄 Reconectar Excel';
-    
+
     await loadFromDB();
     if (pending.length === 0 && done.length === 0) { await saveToDB(); }
     toast("Excel sincronizado con éxito. Actualización en tiempo real activada.");
@@ -859,15 +1221,36 @@ function parseExcelData(data) {
   data.forEach(row => {
     const rec = {
       fecha: row['Fecha'] || '',
-      interno: row['Interno'] || '',
+      hora: row['Hora'] || '',
+      tipo: row['Tipo'] || 'Incidente',
+      prioridad: row['Prioridad'] || 'Baja',
+      origen: row['Origen'] || 'Web',
+      cliente: row['Cliente'] || row['Usuario'] || '',
+      telefono: row['Telefono'] || '',
+      sede: row['Sede'] || '',
+      oficina: row['Oficina/Sector'] || '',
+      piso: row['Piso'] || '',
+      area: row['Area'] || '',
       ubicacion: row['Ubicacion'] || '',
-      motivo: row['Motivo de Llamado'] || '',
-      ticket: row['Ticket'] || '',
-      usuario: row['Usuario'] || '',
       equipo: row['Equipo'] || '',
+      interno: row['Interno'] || '',
+      motivo: row['Motivo de Llamado'] || row['Motivo'] || '',
+      asunto: row['Asunto'] || '',
+      descripcion: row['Descripcion'] || '',
+      ticket: row['Ticket'] || '',
       nota: row['Nota'] || '',
-      hora: row['Hora'] || ''
+      guardiaPasiva: row['Guardia Pasiva'] === 'SI' || row['Guardia Pasiva'] === true || row['Guardia Pasiva'] === 'Sí'
     };
+    // Reconstruir ubicación si no viene en el archivo viejo
+    if (!rec.ubicacion) {
+      if (rec.piso && rec.area) rec.ubicacion = `${rec.piso} - ${rec.area}`;
+      else rec.ubicacion = rec.piso || rec.area || '';
+    }
+    // Compat: si solo viene ubicacion sin piso/area
+    if (rec.ubicacion && !rec.piso && !rec.area) {
+      const parts = rec.ubicacion.split(' - ');
+      if (parts.length === 2) { rec.piso = parts[0]; rec.area = parts[1]; }
+    }
     if (!rec.ticket || rec.ticket === '(PENDIENTE)' || rec.ticket === 'PENDIENTE') {
       pending.push(rec);
     } else {
@@ -892,15 +1275,28 @@ async function loadFromDB() {
 
 function generateExcelFile() {
   const all = [...done, ...pending];
-  const header = ['Fecha', 'Interno', 'Ubicacion', 'Motivo de Llamado', 'Ticket', 'Usuario', 'Equipo', 'Nota', 'Hora'];
+  const header = [
+    'Fecha', 'Hora', 'Tipo', 'Prioridad', 'Origen',
+    'Cliente', 'Telefono', 'Sede', 'Piso', 'Area', 'Oficina/Sector',
+    'Equipo', 'Interno', 'Motivo de Llamado', 'Asunto', 'Descripcion',
+    'Ticket', 'Nota', 'Guardia Pasiva', 'Ubicacion'
+  ];
   const rows = all.map(r => [
-    r.fecha, r.interno, r.ubicacion, r.motivo, r.ticket || 'PENDIENTE', r.usuario, r.equipo, r.nota, r.hora
+    r.fecha || '', r.hora || '', r.tipo || '', r.prioridad || '', r.origen || '',
+    r.cliente || '', r.telefono || '', r.sede || '', r.piso || '', r.area || '', r.oficina || '',
+    r.equipo || '', r.interno || '', r.motivo || '', r.asunto || '', r.descripcion || '',
+    r.ticket || 'PENDIENTE', r.nota || '', r.guardiaPasiva ? 'SI' : 'NO', r.ubicacion || ''
   ]);
-  
+
   const finalData = [header, ...rows];
   const ws = XLSX.utils.aoa_to_sheet(finalData);
-  ws['!cols'] = [{wch:12},{wch:10},{wch:26},{wch:26},{wch:12},{wch:22},{wch:14},{wch:25},{wch:10}];
-  
+  ws['!cols'] = [
+    {wch:12},{wch:10},{wch:12},{wch:10},{wch:12},
+    {wch:24},{wch:14},{wch:18},{wch:12},{wch:18},{wch:22},
+    {wch:14},{wch:10},{wch:22},{wch:26},{wch:32},
+    {wch:12},{wch:22},{wch:14},{wch:26}
+  ];
+
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Tickets_DB');
   return wb;
@@ -914,7 +1310,7 @@ async function saveToDB() {
   try {
     const wb = generateExcelFile();
     const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-    
+
     const writable = await dbHandle.createWritable();
     await writable.write(excelBuffer);
     await writable.close();
@@ -932,83 +1328,189 @@ function createEmptyExcel() {
 }
 
 function pickMotivo(el) {
-  document.querySelectorAll('.motivo-chip').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('#motivoGrid .chip').forEach(c => c.classList.remove('active'));
   el.classList.add('active');
-  selMotivo = el.textContent;
+  selMotivo = el.textContent.trim();
   const isOtro = selMotivo === 'otro…';
   document.getElementById('otroWrap').style.display = isOtro ? 'block' : 'none';
   if (isOtro) document.getElementById('motivoOtro').focus();
+  // Auto-rellenar asunto si está vacío
+  if (!isOtro) {
+    const asuntoEl = document.getElementById('asunto');
+    if (!asuntoEl.value.trim()) asuntoEl.value = selMotivo;
+  }
+}
+
+function pickOrigen(el) {
+  document.querySelectorAll('#origenGrid .chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  selOrigen = el.dataset.origen;
+}
+
+function pickPrioridad(el) {
+  document.querySelectorAll('#prioridadGrid .chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  selPrioridad = el.dataset.prioridad;
+}
+
+function toggleGuardia() {
+  guardiaPasiva = !guardiaPasiva;
+  const row = document.getElementById('guardiaPasivaRow');
+  row.classList.toggle('checked', guardiaPasiva);
 }
 
 function getMotivo() {
   return selMotivo === 'otro…' ? document.getElementById('motivoOtro').value.trim() : selMotivo;
 }
 
+function collectFormData() {
+  return {
+    cliente: document.getElementById('cliente').value.trim(),
+    telefono: document.getElementById('telefono').value.trim(),
+    tipo: document.getElementById('tipo').value,
+    origen: selOrigen,
+    prioridad: selPrioridad,
+    guardiaPasiva: guardiaPasiva,
+    sede: document.getElementById('sede').value,
+    oficina: document.getElementById('oficina').value.trim(),
+    piso: document.getElementById('piso').value.trim(),
+    area: document.getElementById('area').value.trim(),
+    equipo: document.getElementById('equipo').value.trim(),
+    interno: document.getElementById('interno').value.trim(),
+    motivo: getMotivo(),
+    asunto: document.getElementById('asunto').value.trim(),
+    descripcion: document.getElementById('descripcion').value.trim(),
+    ticket: document.getElementById('ticket').value.trim(),
+    nota: document.getElementById('nota').value.trim()
+  };
+}
+
 async function registrar() {
-  const usuario = document.getElementById('usuario').value.trim().toUpperCase();
-  const piso = document.getElementById('piso').value.trim().toUpperCase();
-  const area = document.getElementById('area').value.trim().toUpperCase();
-  const motivo = getMotivo().toUpperCase();
-  const ticket = document.getElementById('ticket').value.trim().toUpperCase();
-  const interno = document.getElementById('interno').value.trim().toUpperCase();
-  const equipo = document.getElementById('equipo').value.trim().toUpperCase();
-  const nota = document.getElementById('nota').value.trim().toUpperCase();
+  const f = collectFormData();
 
   let ubicacion = '';
-  if (piso && area) ubicacion = `${piso} - ${area}`;
-  else if (piso) ubicacion = piso;
-  else if (area) ubicacion = area;
+  if (f.piso && f.area) ubicacion = `${f.piso} - ${f.area}`;
+  else if (f.piso) ubicacion = f.piso;
+  else if (f.area) ubicacion = f.area;
+  else if (f.oficina) ubicacion = f.oficina;
 
-  if (!usuario || !ubicacion || !motivo) {
-    toast('Faltan datos obligatorios (Usuario, Piso/Área, Motivo).');
+  // Validación más liviana: solo el cliente es realmente obligatorio
+  if (!f.cliente) {
+    toast('Falta el nombre del cliente.');
+    document.getElementById('cliente').focus();
     return;
   }
 
+  const motivoFinal = f.motivo || f.asunto || 'Sin motivo';
+
   const now = new Date();
   const rec = {
-    interno, ubicacion, motivo, ticket, usuario, equipo, nota,
+    ...f,
+    motivo: motivoFinal,
+    ubicacion,
     fecha: now.toLocaleDateString('es-AR'),
     hora: now.toLocaleTimeString('es-AR')
   };
 
-  if (ticket) done.unshift(rec);
+  if (f.ticket) done.unshift(rec);
   else pending.unshift(rec);
 
   clearForm();
   render();
-  
+
   if (dbHandle) {
     await saveToDB();
-    toast('Ticket Registrado y Guardado en el Excel ✓');
+    toast('Ticket registrado y guardado en el Excel ✓');
   } else {
     toast('⚠️ Guardado en memoria. Conectá el Excel para asegurar datos.');
   }
 }
 
-function copyFieldText(btn, text) {
+function copyTextToClipboard(text) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    return navigator.clipboard.writeText(text);
+  }
   const el = document.createElement('textarea');
   el.value = text;
+  el.style.position = 'fixed';
+  el.style.opacity = '0';
   document.body.appendChild(el);
   el.select();
   document.execCommand('copy');
   document.body.removeChild(el);
-  
-  const orig = btn.innerHTML;
-  btn.innerHTML = `<span style="font-size:10px; font-weight:bold; color:var(--done);">OK</span>`;
-  setTimeout(() => btn.innerHTML = orig, 1200);
+  return Promise.resolve();
+}
+
+function copyField(id) {
+  const val = document.getElementById(id).value.trim();
+  if (!val) { toast('El campo está vacío.'); return; }
+  copyTextToClipboard(val).then(() => toast(`Copiado: ${val.length > 40 ? val.slice(0, 40) + '…' : val}`));
+}
+
+function copyFieldText(btn, text) {
+  copyTextToClipboard(text).then(() => {
+    const orig = btn.innerHTML;
+    btn.innerHTML = `<span style="font-size:10px; font-weight:bold; color:var(--done);">OK</span>`;
+    setTimeout(() => btn.innerHTML = orig, 1200);
+  });
+}
+
+function buildCopyAllText() {
+  const f = collectFormData();
+  const lines = [];
+  if (f.cliente) lines.push(`Cliente: ${f.cliente}`);
+  if (f.telefono) lines.push(`Teléfono: ${f.telefono}`);
+  lines.push(`Origen: ${f.origen}`);
+  lines.push(`Tipo: ${f.tipo}`);
+  lines.push(`Prioridad: ${f.prioridad}`);
+  if (f.guardiaPasiva) lines.push(`Guardia Pasiva: SÍ`);
+  if (f.sede) lines.push(`Sede: ${f.sede}`);
+  if (f.oficina) lines.push(`Oficina/Sector: ${f.oficina}`);
+  if (f.piso) lines.push(`Piso: ${f.piso}`);
+  if (f.area) lines.push(`Área: ${f.area}`);
+  if (f.equipo) lines.push(`Nombre de Equipo: ${f.equipo}`);
+  if (f.interno) lines.push(`Interno: ${f.interno}`);
+  if (f.motivo) lines.push(`Motivo: ${f.motivo}`);
+  if (f.asunto) lines.push(`Asunto: ${f.asunto}`);
+  if (f.descripcion) lines.push(`\nDescripción:\n${f.descripcion}`);
+  if (f.nota) lines.push(`\nNota: ${f.nota}`);
+  return lines.join('\n');
+}
+
+function openCopyModal() {
+  const f = collectFormData();
+  if (!f.cliente && !f.asunto && !f.descripcion && !f.motivo) {
+    toast('Llená al menos algún campo antes de copiar.');
+    return;
+  }
+  document.getElementById('copyPreview').textContent = buildCopyAllText();
+  document.getElementById('copyOverlay').classList.add('open');
+}
+
+function closeCopyModal() {
+  document.getElementById('copyOverlay').classList.remove('open');
+}
+
+function copyAllText() {
+  const text = document.getElementById('copyPreview').textContent;
+  copyTextToClipboard(text).then(() => {
+    toast('✓ Todo copiado al portapapeles');
+    closeCopyModal();
+  });
 }
 
 function makeDetailRow(label, value) {
   if (!value || value === '-') {
     return `<div style="display:flex; align-items:center; margin-bottom: 6px;">
-      <strong style="width: 75px; color:var(--muted); font-weight:500;">${label}:</strong> 
+      <strong style="width: 110px; color:var(--muted); font-weight:500;">${label}:</strong>
       <span style="color:var(--muted)">-</span>
     </div>`;
   }
+  const safe = String(value).replace(/'/g, "\\'").replace(/"/g, '&quot;');
   return `<div style="display:flex; align-items:center; margin-bottom: 6px;">
-    <strong style="width: 75px; flex-shrink:0; color:var(--muted); font-weight:500;">${label}:</strong> 
+    <strong style="width: 110px; flex-shrink:0; color:var(--muted); font-weight:500;">${label}:</strong>
     <span style="flex:1; word-break: break-word; color:var(--text);">${value}</span>
-    <button class="btn-copy-small" onclick="copyFieldText(this, '${value.replace(/'/g, "\\'")}')" title="Copiar Dato">
+    <button class="btn-copy-small" onclick="copyFieldText(this, '${safe}')" title="Copiar Dato">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
     </button>
   </div>`;
@@ -1017,20 +1519,27 @@ function makeDetailRow(label, value) {
 function openModal(i) {
   mIdx = i;
   const r = pending[i];
-  
+
   let html = '';
-  html += makeDetailRow('Usuario', r.usuario);
+  html += makeDetailRow('Cliente', r.cliente || r.usuario);
+  html += makeDetailRow('Teléfono', r.telefono);
   html += makeDetailRow('Interno', r.interno);
   html += makeDetailRow('Ubicación', r.ubicacion);
   html += makeDetailRow('Equipo', r.equipo);
   html += makeDetailRow('Motivo', r.motivo);
+  html += makeDetailRow('Asunto', r.asunto);
 
+  if (r.descripcion) {
+    html += `<div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border);">`;
+    html += makeDetailRow('Descripción', r.descripcion);
+    html += `</div>`;
+  }
   if (r.nota) {
     html += `<div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border);">`;
     html += makeDetailRow('Nota', r.nota);
     html += `</div>`;
   }
-  
+
   document.getElementById('mDetails').innerHTML = html;
   document.getElementById('mTicket').value = '';
   document.getElementById('overlay').classList.add('open');
@@ -1044,29 +1553,42 @@ function closeModal() {
 
 function openViewModal(i, type = 'done') {
   const r = type === 'pending' ? pending[i] : done[i];
-  
+
   let html = `
     <div style="margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 12px; display:flex; align-items:center;">
-      <strong style="width: 75px; color:var(--muted); font-weight:500;">Ticket N°:</strong> 
+      <strong style="width: 110px; color:var(--muted); font-weight:500;">Ticket N°:</strong>
       <span style="color: var(--cloud); font-size: 16px; font-weight: 500; flex:1;">${r.ticket || 'PENDIENTE'}</span>
       ${r.ticket ? `<button class="btn-copy-small" onclick="copyFieldText(this, '${r.ticket}')" title="Copiar Ticket"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>` : ''}
     </div>
   `;
-  
-  html += makeDetailRow('Usuario', r.usuario);
-  html += makeDetailRow('Interno', r.interno);
+
+  html += makeDetailRow('Cliente', r.cliente || r.usuario);
+  html += makeDetailRow('Teléfono', r.telefono);
+  html += makeDetailRow('Tipo', r.tipo);
+  html += makeDetailRow('Prioridad', r.prioridad);
+  html += makeDetailRow('Origen', r.origen);
+  if (r.guardiaPasiva) html += makeDetailRow('Guardia Pasiva', 'SÍ');
+  html += makeDetailRow('Sede', r.sede);
   html += makeDetailRow('Ubicación', r.ubicacion);
+  html += makeDetailRow('Oficina/Sector', r.oficina);
   html += makeDetailRow('Equipo', r.equipo);
+  html += makeDetailRow('Interno', r.interno);
   html += makeDetailRow('Motivo', r.motivo);
+  html += makeDetailRow('Asunto', r.asunto);
   html += makeDetailRow('Fecha', r.fecha);
   html += makeDetailRow('Hora', r.hora);
-  
+
+  if (r.descripcion) {
+    html += `<div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border);">`;
+    html += makeDetailRow('Descripción', r.descripcion);
+    html += `</div>`;
+  }
   if (r.nota) {
     html += `<div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border);">`;
     html += makeDetailRow('Nota', r.nota);
     html += `</div>`;
   }
-  
+
   document.getElementById('vDetails').innerHTML = html;
   document.getElementById('viewOverlay').classList.add('open');
 }
@@ -1076,16 +1598,16 @@ function closeViewModal() {
 }
 
 async function confirmTicket() {
-  const num = document.getElementById('mTicket').value.trim().toUpperCase();
+  const num = document.getElementById('mTicket').value.trim();
   if (!num) return;
-  
+
   const rec = { ...pending[mIdx], ticket: num };
   pending.splice(mIdx, 1);
   done.unshift(rec);
-  
-  render(); 
+
+  render();
   closeModal();
-  
+
   if (dbHandle) {
     await saveToDB();
     toast(`Ticket N°${num} actualizado en el Excel ✓`);
@@ -1096,9 +1618,9 @@ async function deleteTicket(type, index) {
   if (!confirm('⚠️ ¿Estás seguro de eliminar este ticket?')) return;
   if (type === 'pending') pending.splice(index, 1);
   else done.splice(index, 1);
-  
+
   render();
-  
+
   if (dbHandle) {
     await saveToDB();
     toast('🗑️ Ticket eliminado del Excel.');
@@ -1109,16 +1631,9 @@ async function deleteTicket(type, index) {
 
 function copyToClipboard(index) {
   const r = done[index];
-  const notaVal = r.nota ? r.nota : '-';
-  const line = `${r.fecha}\t${r.interno}\t${r.ubicacion}\t${r.motivo}\t${r.ticket}\t${r.usuario}\t${r.equipo}\t${notaVal}\t${r.hora}`;
-  
-  const el = document.createElement('textarea');
-  el.value = line;
-  document.body.appendChild(el);
-  el.select();
-  document.execCommand('copy');
-  document.body.removeChild(el);
-  toast('Fila copiada.');
+  const fields = [r.fecha, r.hora, r.tipo, r.prioridad, r.origen, r.cliente, r.telefono, r.sede, r.ubicacion, r.oficina, r.equipo, r.interno, r.motivo, r.asunto, r.descripcion, r.ticket, r.nota || '-', r.guardiaPasiva ? 'SI' : 'NO'];
+  const line = fields.map(v => v || '').join('\t');
+  copyTextToClipboard(line).then(() => toast('Fila copiada.'));
 }
 
 function render() {
@@ -1128,8 +1643,8 @@ function render() {
         <div class="pending-row">
           <div class="p-dot"></div>
           <div class="p-info">
-            <div class="p-user">${r.usuario}</div>
-            <div class="p-sub">${r.motivo} <span class="p-time">${r.hora.slice(0,5)}</span></div>
+            <div class="p-user">${r.cliente || r.usuario || 'Sin nombre'}</div>
+            <div class="p-sub">${r.motivo || r.asunto || ''} <span class="p-time">${(r.hora || '').slice(0,5)}</span></div>
           </div>
           <div class="actions-row">
             <button class="btn-icon" onclick="openViewModal(${i}, 'pending')" title="Ver Detalles">
@@ -1149,11 +1664,12 @@ function render() {
 
   const todayDone = done.filter(r => r.fecha === hoy);
 
-  const filteredDone = todayDone.filter(r => 
-    !query || 
-    (r.usuario && r.usuario.toLowerCase().includes(query)) ||
+  const filteredDone = todayDone.filter(r =>
+    !query ||
+    ((r.cliente || r.usuario) && (r.cliente || r.usuario).toLowerCase().includes(query)) ||
     (r.equipo && r.equipo.toLowerCase().includes(query)) ||
     (r.ubicacion && r.ubicacion.toLowerCase().includes(query)) ||
+    (r.asunto && r.asunto.toLowerCase().includes(query)) ||
     (r.ticket && String(r.ticket).toLowerCase().includes(query))
   );
 
@@ -1167,8 +1683,8 @@ function render() {
       return `
       <div class="done-row">
         <div class="d-content">
-          <span class="d-user">${r.usuario}</span>
-          <span class="d-motivo"><span class="d-ticket">#${r.ticket}</span> · ${r.motivo}</span>
+          <span class="d-user">${r.cliente || r.usuario || 'Sin nombre'}</span>
+          <span class="d-motivo"><span class="d-ticket">#${r.ticket}</span> · ${r.motivo || r.asunto || ''}</span>
         </div>
         <div class="actions-row">
           <button class="btn-icon" onclick="openViewModal(${i}, 'done')" title="Ver Detalles">
@@ -1184,18 +1700,32 @@ function render() {
       </div>`;
     }).join('');
   }
-  
-  document.getElementById('doneList').innerHTML = filteredDone.length 
-    ? doneHtml 
+
+  document.getElementById('doneList').innerHTML = filteredDone.length
+    ? doneHtml
     : (todayDone.length ? '<div class="empty-note">No se encontraron resultados en tu búsqueda.</div>' : '<div class="empty-note">Sin tickets completados hoy.</div>');
 }
 
 function clearForm() {
-  ['interno','ticket','usuario','piso','area','equipo','nota','motivoOtro'].forEach(id =>
-    document.getElementById(id).value = '');
-  document.querySelectorAll('.motivo-chip').forEach(c => c.classList.remove('active'));
+  ['cliente','telefono','oficina','piso','area','equipo','interno','asunto','descripcion','ticket','nota','motivoOtro']
+    .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  document.getElementById('sede').value = '';
+  document.getElementById('tipo').value = 'Incidente';
+  document.querySelectorAll('#motivoGrid .chip').forEach(c => c.classList.remove('active'));
   selMotivo = '';
   document.getElementById('otroWrap').style.display = 'none';
+
+  // Reset origen y prioridad a defaults
+  document.querySelectorAll('#origenGrid .chip').forEach(c => c.classList.remove('active'));
+  const webChip = document.querySelector('#origenGrid [data-origen="Web"]');
+  if (webChip) { webChip.classList.add('active'); selOrigen = 'Web'; }
+
+  document.querySelectorAll('#prioridadGrid .chip').forEach(c => c.classList.remove('active'));
+  const bajaChip = document.querySelector('#prioridadGrid [data-prioridad="Baja"]');
+  if (bajaChip) { bajaChip.classList.add('active'); selPrioridad = 'Baja'; }
+
+  guardiaPasiva = false;
+  document.getElementById('guardiaPasivaRow').classList.remove('checked');
 }
 
 function toast(msg) {
