@@ -733,6 +733,7 @@ header::after {
         <button class="motivo-chip" onclick="pickMotivo(this)">Sin wifi Hua Corp</button>
         <button class="motivo-chip" onclick="pickMotivo(this)">No enciende PC</button>
         <button class="motivo-chip" onclick="pickMotivo(this)">PECTRA</button>
+        <button class="motivo-chip" onclick="pickMotivo(this)">Totem</button>
         <button class="motivo-chip" onclick="pickMotivo(this)">otro…</button>
       </div>
       <div class="motivo-otro" id="otroWrap" style="display:none">
@@ -882,6 +883,25 @@ let done    = [];
 let selMotivo = '';
 let mIdx = null;
 let dbHandle = null;
+
+const MOTIVO_URLS = {
+  'USUARIO BLOQUEADO': 'https://portal.austral.edu.ar/incident/create/index/quick-request/674f7a31c7f33',
+  'PECTRA': 'https://portal.austral.edu.ar/incident/create/index/quick-request/6746130a4d1de',
+  'SIN RED': 'https://portal.austral.edu.ar/incident/create/index/quick-request/6a3a8c86c07e0',
+  'NO ENCIENDE PC': 'https://portal.austral.edu.ar/incident/create/index/quick-request/6a3a8d0c7e69d',
+  'SIN WIFI HUA CORP': 'https://portal.austral.edu.ar/incident/create/index/quick-request/6a3a8d6079d2c',
+  'TOTEM': 'https://portal.austral.edu.ar/incident/create/index/quick-request/6a3a8def36468'
+};
+
+function openInvGateForMotivo(rec) {
+  const motivo = (rec.motivo || '').toUpperCase().trim();
+  const url = MOTIVO_URLS[motivo];
+  if (!url) return false;
+  const usuario = rec.usuario || '';
+  if (usuario) copyTextToClipboard(usuario);
+  window.open(url, '_blank');
+  return true;
+}
 
 function tick() {
   const now = new Date();
@@ -1165,6 +1185,11 @@ function makeDetailRow(label, value) {
 function openModal(i) {
   mIdx = i;
   const r = pending[i];
+
+  const opened = openInvGateForMotivo(r);
+  if (opened) {
+    toast(r.usuario ? `Abriendo InvGate · Usuario "${r.usuario}" copiado, pegalo con Ctrl+V` : 'Abriendo InvGate en una pestaña nueva');
+  }
 
   let html = '';
   html += makeDetailRow('Usuario', r.usuario);
