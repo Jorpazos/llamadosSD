@@ -324,18 +324,27 @@ input[type=range]{width:100%;accent-color:var(--ui-accent);cursor:pointer;height
 .sysbox.enc{background:#182229;color:#ffd279;font-size:11.6px}
 
 /* barra de escritura */
-.wa-foot{flex-shrink:0;padding:5px 8px 7px;display:flex;align-items:flex-end;gap:7px;background:var(--wa-chat)}
+.wa-foot{flex-shrink:0;padding:6px 11px 8px;display:flex;align-items:center;gap:7px;background:var(--wa-chat)}
 .inputbar{
-  flex:1;background:var(--wa-input);border-radius:25px;display:flex;align-items:center;
-  gap:9px;padding:9px 12px;min-height:46px;
+  flex:1;background:var(--wa-input);border-radius:24px;display:flex;align-items:center;
+  gap:10px;padding:0 13px;height:42px;
 }
-.inputbar .ph{flex:1;color:#8696a0;font-size:15.5px}
-.inputbar svg{width:22px;height:22px;fill:var(--wa-icon);flex-shrink:0;display:block}
-.inputbar .clip{transform:rotate(-45deg)}
+.inputbar .ph{flex:1;color:#8696a0;font-size:16.5px;margin-left:-4px}
+.inputbar .stk .eyes{stroke-width:2.1}
+.inputbar .caret{
+  width:2px;height:21px;background:#25d366;border-radius:1px;flex-shrink:0;display:block;
+}
+.inputbar svg{flex-shrink:0;display:block}
+.inputbar .ln{
+  width:22px;height:22px;fill:none;stroke:#8696a0;stroke-width:1.7;
+  stroke-linecap:round;stroke-linejoin:round;
+}
+.inputbar .clip{width:20px;height:20px;transform:rotate(20deg)}
+.inputbar .ai{width:18px;height:18px;fill:#8696a0}
 .micbtn{
-  width:46px;height:46px;border-radius:50%;background:#21c063;display:grid;place-items:center;flex-shrink:0;
+  width:52px;height:52px;border-radius:50%;background:#21c063;display:grid;place-items:center;flex-shrink:0;
 }
-.micbtn svg{width:22px;height:22px;fill:#0b141a}
+.micbtn svg{width:24px;height:24px;fill:#0b141a}
 
 /* nav android */
 .navbar{
@@ -434,7 +443,10 @@ input[type=range]{width:100%;accent-color:var(--ui-accent);cursor:pointer;height
             <select id="sBattRed"><option value="1">Sí</option><option value="0">No</option></select>
           </div>
         </div>
-        <label class="chk"><input type="checkbox" id="uNav"> Barra de navegación</label>
+        <div class="grid2">
+          <label class="chk"><input type="checkbox" id="uNav"> Barra de navegación</label>
+          <label class="chk"><input type="checkbox" id="uAI"> Ícono de IA al escribir</label>
+        </div>
       </div>
 
       <!-- Fondo -->
@@ -559,11 +571,20 @@ input[type=range]{width:100%;accent-color:var(--ui-accent);cursor:pointer;height
 
         <div class="wa-foot">
           <div class="inputbar">
-            <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16zM8.5 9.5a1.3 1.3 0 1 1 2.6 0 1.3 1.3 0 0 1-2.6 0zm4.4 0a1.3 1.3 0 1 1 2.6 0 1.3 1.3 0 0 1-2.6 0zM12 17.5c-2.3 0-4.3-1.4-5.1-3.5h10.2c-.8 2.1-2.8 3.5-5.1 3.5z"/></svg>
+            <svg class="ln stk" viewBox="0 0 24 24">
+              <path d="M6.4 2.6h11.2a3.8 3.8 0 0 1 3.8 3.8v7.2l-7.8 7.8H6.4a3.8 3.8 0 0 1-3.8-3.8V6.4a3.8 3.8 0 0 1 3.8-3.8z"/>
+              <path d="M21.4 13.6a7.8 7.8 0 0 0-7.8 7.8"/>
+              <path class="eyes" d="M8.8 10h.01M15.2 10h.01"/>
+              <path d="M8 14.6a4.7 4.7 0 0 0 5.3 2.3"/>
+            </svg>
+            <span class="caret"></span>
             <span class="ph">Mensaje</span>
-            <svg class="clip" viewBox="0 0 24 24"><path d="M16.5 6v11.5a4.5 4.5 0 1 1-9 0V5a3 3 0 1 1 6 0v10.5a1.5 1.5 0 1 1-3 0V6H9v9.5a3 3 0 1 0 6 0V5a4.5 4.5 0 1 0-9 0v12.5a6 6 0 1 0 12 0V6h-1.5z"/></svg>
-            <svg viewBox="0 0 24 24"><path d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4zM9 3L7.2 5H4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-3.2L15 3H9zm3 14a5 5 0 1 1 0-10 5 5 0 0 1 0 10z"/></svg>
-            <svg viewBox="0 0 24 24" style="width:18px;height:18px"><path d="M12 2l2.2 5.8L20 10l-5.8 2.2L12 18l-2.2-5.8L4 10l5.8-2.2L12 2zm7 10l.9 2.4 2.4.9-2.4.9-.9 2.4-.9-2.4-2.4-.9 2.4-.9.9-2.4z"/></svg>
+            <svg class="ln clip" viewBox="0 0 24 24"><path d="M17.6 7v9.6a5.6 5.6 0 0 1-11.2 0V6.2a3.6 3.6 0 0 1 7.2 0v10.2a1.7 1.7 0 0 1-3.4 0V7.4"/></svg>
+            <svg class="ln cam" viewBox="0 0 24 24">
+              <path d="M3.2 7.4h3.3l1.6-2.4h7.8l1.6 2.4h3.3a1.5 1.5 0 0 1 1.5 1.5v9.1a1.5 1.5 0 0 1-1.5 1.5H3.2a1.5 1.5 0 0 1-1.5-1.5V8.9a1.5 1.5 0 0 1 1.5-1.5z"/>
+              <path d="M12 9.7a3.8 3.8 0 1 1 0 7.6 3.8 3.8 0 0 1 0-7.6z"/>
+            </svg>
+            <svg class="ai" viewBox="0 0 24 24"><path d="M12 2l2.2 5.8L20 10l-5.8 2.2L12 18l-2.2-5.8L4 10l5.8-2.2L12 2zm7 10l.9 2.4 2.4.9-2.4.9-.9 2.4-.9-2.4-2.4-.9 2.4-.9.9-2.4z"/></svg>
           </div>
           <div class="micbtn">
             <svg viewBox="0 0 24 24"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5.9-3c0 3-2.5 5.4-5.4 5.4S7.1 15 7.1 12H5.4c0 3.6 2.7 6.6 6.1 7.1V22h2.2v-2.9c3.4-.5 6.1-3.5 6.1-7.1h-1.9z"/></svg>
@@ -728,7 +749,7 @@ function demo(){
   return {
     contact:{ name:'Ayelen Segovia', sub:'', avatar:'' },
     status:{ time:'1:15', batt:11, battRed:true },
-    ui:{ nav:true, wall:'image', wallSet:false, bg:'#0e1f28', dop:0.09, wallImg:'',
+    ui:{ nav:true, ai:false, wall:'image', wallSet:false, bg:'#0e1f28', dop:0.09, wallImg:'',
          wallFit:'tile', wallScale:100, w:400, h:844 },
     messages:[
       { id:uid(), side:'in', type:'text', text:'Y si', time:'8:46 a. m.', ticks:'none',
@@ -905,6 +926,7 @@ function renderPhone(){
   ph.style.width = (S.ui.w||400)+'px';
   ph.style.height = (S.ui.h||844)+'px';
   $('#navbar').style.display = S.ui.nav ? 'flex' : 'none';
+  document.querySelector('.inputbar .ai').style.display = S.ui.ai ? 'block' : 'none';
 
   // fondo del chat
   chat.style.backgroundColor = S.ui.bg || '#0e1f28';
@@ -1235,6 +1257,7 @@ bind('#sBattRed', el => S.status.battRed = el.value==='1', 'change');
 bind('#pW', el => S.ui.w = parseInt(el.value,10)||400);
 bind('#pH', el => S.ui.h = parseInt(el.value,10)||844);
 bind('#uNav',  el => S.ui.nav = el.checked, 'change');
+bind('#uAI',   el => S.ui.ai  = el.checked, 'change');
 bind('#uWall', el => { S.ui.wall = el.value; S.ui.wallSet = true; }, 'change');
 bind('#uDop',  el => S.ui.dop = parseInt(el.value,10)/200);
 bind('#uBg',   el => { S.ui.bg = el.value; $('#uBgHex').value = el.value; });
@@ -1293,6 +1316,7 @@ function fillSettings(){
   $('#pW').value = S.ui.w||400;
   $('#pH').value = S.ui.h||844;
   $('#uNav').checked = !!S.ui.nav;
+  $('#uAI').checked  = !!S.ui.ai;
   $('#uWall').value = S.ui.wall || 'doodles';
   $('#uBg').value = S.ui.bg || '#0e1f28';
   $('#uBgHex').value = S.ui.bg || '#0e1f28';
