@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fake Chat · Generador de chats de WhatsApp</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root{
+  /* UI del editor */
+  --ui-bg:#0f1115;
+  --ui-panel:#171a20;
+  --ui-raised:#1e222a;
+  --ui-border:#2a2f39;
+  --ui-text:#e6e8ec;
+  --ui-muted:#8b93a1;
+  --ui-accent:#25d366;
+
+  /* Tema WhatsApp oscuro */
+  --wa-status:#000000;
+  --wa-header:#0b141a;
+  --wa-chat:#0b141a;
+  --wa-in:#1f2c34;
+  --wa-out:#005c4b;
+  --wa-text:#e9edef;
+  --wa-meta:rgba(233,237,239,.6);
+  --wa-meta-out:rgba(255,255,255,.65);
+  --wa-green:#06cf9c;
+  --wa-blue:#53bdeb;
+  --wa-icon:#aebac1;
+  --wa-input:#1f2c34;
+}
+
+html,body{height:100%;}
+body{
+  background:var(--ui-bg);
+  color:var(--ui-text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ============ LAYOUT ============ */
+.app{display:grid;grid-template-columns:390px 1fr;height:100vh;overflow:hidden;}
+
+.sidebar{
+  background:var(--ui-panel);
+  border-right:1px solid var(--ui-border);
+  display:flex;flex-direction:column;overflow:hidden;
+}
+.side-head{
+  padding:14px 16px;border-bottom:1px solid var(--ui-border);
+  display:flex;align-items:center;gap:10px;flex-shrink:0;
+}
+.logo{
+  width:30px;height:30px;border-radius:9px;background:var(--ui-accent);
+  display:grid;place-items:center;flex-shrink:0;
+}
+.logo svg{width:18px;height:18px;fill:#0b141a}
+.side-head h1{font-size:14px;font-weight:600;letter-spacing:.2px}
+.side-head p{font-size:11px;color:var(--ui-muted);margin-top:1px}
+
+.side-scroll{overflow-y:auto;padding:14px 16px 40px;flex:1}
+.side-scroll::-webkit-scrollbar{width:10px}
+.side-scroll::-webkit-scrollbar-thumb{background:#2c313b;border-radius:8px;border:3px solid var(--ui-panel)}
+
+.sec{margin-bottom:18px}
+.sec-t{
+  font-size:10.5px;text-transform:uppercase;letter-spacing:1.1px;color:var(--ui-muted);
+  font-weight:600;margin-bottom:9px;display:flex;align-items:center;gap:8px;
+}
+.sec-t::after{content:"";flex:1;height:1px;background:var(--ui-border)}
+
+label.f{display:block;font-size:11px;color:var(--ui-muted);margin-bottom:4px}
+input[type=text],input[type=number],select,textarea{
+  width:100%;background:var(--ui-raised);border:1px solid var(--ui-border);
+  color:var(--ui-text);border-radius:8px;padding:7px 9px;font-size:12.5px;
+  font-family:inherit;outline:none;transition:border-color .15s;
+}
+input:focus,select:focus,textarea:focus{border-color:var(--ui-accent)}
+textarea{resize:vertical;min-height:52px;line-height:1.4}
+select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%238b93a1'><path d='M7 10l5 5 5-5z'/></svg>");background-repeat:no-repeat;background-position:right 4px center;background-size:18px;padding-right:22px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.row-f{margin-bottom:9px}
+
+.chk{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--ui-text);cursor:pointer;user-select:none}
+.chk input{width:15px;height:15px;accent-color:var(--ui-accent);cursor:pointer;flex-shrink:0}
+
+.btn{
+  background:var(--ui-raised);border:1px solid var(--ui-border);color:var(--ui-text);
+  border-radius:8px;padding:8px 12px;font-size:12px;font-family:inherit;cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:.15s;font-weight:500;
+}
+.btn:hover{background:#262b34;border-color:#3a414d}
+.btn.primary{background:var(--ui-accent);border-color:var(--ui-accent);color:#062e18;font-weight:600}
+.btn.primary:hover{background:#2ee574}
+.btn.wide{width:100%}
+.btn.sm{padding:5px 8px;font-size:11px}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap}
+
+.file-btn{position:relative;overflow:hidden;display:inline-flex}
+.file-btn input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;font-size:0}
+
+/* ---- tarjetas de mensajes ---- */
+.msg-list{display:flex;flex-direction:column;gap:6px}
+.card{background:var(--ui-raised);border:1px solid var(--ui-border);border-radius:9px;overflow:hidden}
+.card.open{border-color:#3d454f}
+.card.hl{border-color:var(--ui-accent);box-shadow:0 0 0 2px rgba(37,211,102,.18)}
+.card.drag-over{border-color:var(--ui-accent);border-style:dashed}
+.card-h{display:flex;align-items:center;gap:7px;padding:7px 8px;cursor:pointer}
+.handle{color:#5c6472;cursor:grab;font-size:13px;line-height:1;letter-spacing:-2px;flex-shrink:0}
+.badge{
+  font-size:9.5px;font-weight:700;letter-spacing:.4px;padding:2px 6px;border-radius:5px;
+  flex-shrink:0;text-transform:uppercase;
+}
+.badge.in{background:#2b3742;color:#9fb3c0}
+.badge.out{background:#0c4a3d;color:#5fe0b4}
+.badge.sys{background:#3a3350;color:#c0b0e8}
+.prev{
+  flex:1;font-size:11.5px;color:var(--ui-muted);white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis;min-width:0;
+}
+.mini{
+  background:transparent;border:0;color:#6b7484;cursor:pointer;font-size:12px;
+  padding:3px 4px;border-radius:5px;line-height:1;flex-shrink:0;
+}
+.mini:hover{background:#2c323c;color:var(--ui-text)}
+.mini.del:hover{color:#ff6b6b}
+.card-b{padding:0 9px 10px;border-top:1px solid var(--ui-border);padding-top:10px;display:none}
+.card.open .card-b{display:block}
+
+.thumb{
+  width:100%;height:78px;object-fit:cover;border-radius:7px;border:1px solid var(--ui-border);
+  margin-bottom:7px;background:#11141a;display:block;
+}
+
+.hint{font-size:10.5px;color:#5f6775;line-height:1.45;margin-top:6px}
+
+/* ============ STAGE / TELÉFONO ============ */
+.stage{
+  position:relative;overflow:auto;display:flex;flex-direction:column;align-items:center;
+  padding:0 26px 30px;
+  background:
+    radial-gradient(1000px 600px at 60% -10%, #1b2028 0%, transparent 60%),
+    repeating-linear-gradient(45deg,#0d1015 0 12px,#0f1218 12px 24px);
+}
+.stage-bar{
+  position:sticky;top:0;z-index:20;display:flex;gap:8px;align-items:center;
+  background:rgba(15,17,21,.9);border:1px solid var(--ui-border);border-top:0;
+  border-radius:0 0 12px 12px;padding:8px 10px;margin-bottom:22px;
+  backdrop-filter:blur(8px);flex-shrink:0;
+}
+.zoom-lbl{font-size:11px;color:var(--ui-muted);padding:0 4px;min-width:38px;text-align:center}
+
+.phone-wrap{transform-origin:top center;}
+
+.phone{
+  width:400px;height:844px;background:var(--wa-chat);
+  display:flex;flex-direction:column;overflow:hidden;position:relative;
+  font-family:"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  box-shadow:0 24px 70px rgba(0,0,0,.6);
+  border-radius:2px;
+}
+
+/* --- barra de estado --- */
+.statusbar{
+  height:30px;background:var(--wa-status);color:#fff;flex-shrink:0;
+  display:flex;align-items:center;justify-content:space-between;padding:0 11px;font-size:12.5px;
+}
+.sb-l{display:flex;align-items:center;gap:6px}
+.sb-l .t{font-weight:500;letter-spacing:.2px}
+.sb-r{display:flex;align-items:center;gap:5px}
+.sb-r svg{width:13px;height:13px;fill:#fff;display:block}
+.batt{
+  min-width:20px;height:14px;border-radius:4px;background:#e04b4b;color:#fff;font-size:9px;
+  font-weight:700;display:grid;place-items:center;padding:0 3px;letter-spacing:-.2px;
+}
+.dots{display:flex;gap:2px;align-items:center}
+.dots i{width:3px;height:3px;border-radius:50%;background:#fff;display:block}
+
+/* --- header --- */
+.wa-head{
+  background:var(--wa-header);flex-shrink:0;display:flex;align-items:center;
+  gap:2px;padding:8px 10px 10px;
+}
+.wa-head .back{width:26px;height:26px;flex-shrink:0;fill:var(--wa-text)}
+.wa-head .av{
+  width:38px;height:38px;border-radius:50%;object-fit:cover;margin:0 9px 0 4px;flex-shrink:0;
+  background:#3b4a54;display:block;
+}
+.wa-head .who{flex:1;min-width:0}
+.wa-head .nm{
+  font-size:16.5px;color:var(--wa-text);font-weight:500;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;line-height:1.2;
+}
+.wa-head .st{font-size:12px;color:var(--wa-icon);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wa-head .acts{display:flex;align-items:center;gap:16px;padding:0 4px 0 10px;flex-shrink:0}
+.wa-head .acts svg{width:21px;height:21px;fill:var(--wa-text);display:block}
+.wa-head .acts .kebab{width:5px;height:21px}
+
+/* --- chat --- */
+.wa-chat{
+  flex:1;overflow-y:auto;overflow-x:hidden;padding:8px 8px 10px;
+  display:flex;flex-direction:column;background-color:var(--wa-chat);
+  background-repeat:repeat;background-size:280px 280px;
+  scrollbar-width:none;
+}
+.wa-chat::-webkit-scrollbar{width:0;display:none}
+
+.row{display:flex;margin-top:2px;padding:0 2px}
+.row.gap{margin-top:11px}
+.row.out{justify-content:flex-end}
+.row.in{justify-content:flex-start}
+
+.bubble{
+  position:relative;max-width:78%;border-radius:8px;padding:6px 8px 7px 9px;
+  color:var(--wa-text);font-size:14.6px;line-height:19px;
+  box-shadow:0 1px .5px rgba(11,20,26,.13);
+  word-wrap:break-word;overflow-wrap:anywhere;white-space:pre-wrap;
+}
+.bubble.in{background:var(--wa-in);margin-left:8px}
+.bubble.out{background:var(--wa-out);margin-right:8px}
+.bubble.tail.in{border-top-left-radius:0}
+.bubble.tail.out{border-top-right-radius:0}
+.bubble.tail.in::before{
+  content:"";position:absolute;left:-8px;top:0;width:8px;height:13px;background:var(--wa-in);
+  clip-path:polygon(0 0,100% 0,100% 100%);
+}
+.bubble.tail.out::before{
+  content:"";position:absolute;right:-8px;top:0;width:8px;height:13px;background:var(--wa-out);
+  clip-path:polygon(0 0,100% 0,0 100%);
+}
+
+.meta{
+  position:absolute;right:8px;bottom:5px;display:flex;align-items:center;gap:3px;
+  font-size:11px;line-height:11px;color:var(--wa-meta);white-space:nowrap;
+}
+.bubble.out .meta{color:var(--wa-meta-out)}
+.meta .tick{display:block;height:12px}
+.meta .tick svg{height:12px;width:auto;display:block}
+.tick.read{color:var(--wa-blue)}
+.tick.sent,.tick.delivered{color:var(--wa-meta-out)}
+.bubble.in .tick{color:var(--wa-meta)}
+.metaspace{display:inline-block;height:1px}
+
+/* cita / reply */
+.quote{
+  display:flex;background:rgba(0,0,0,.22);border-radius:5px;overflow:hidden;
+  margin-bottom:4px;cursor:pointer;max-width:100%;
+}
+.bubble.in .quote{background:rgba(255,255,255,.055)}
+.quote .bar{width:4px;flex-shrink:0;background:var(--wa-green)}
+.quote .qc{padding:5px 8px 6px;min-width:0;flex:1;overflow:hidden}
+.quote .qa{font-size:12.8px;color:var(--wa-green);font-weight:500;line-height:16px;margin-bottom:1px}
+.quote .qt{
+  font-size:13.2px;line-height:17px;color:rgba(233,237,239,.7);
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+  white-space:pre-wrap;
+}
+.quote .qt.media{display:flex;align-items:center;gap:5px}
+.quote .qt.media svg{width:14px;height:14px;fill:currentColor;flex-shrink:0}
+
+/* reenviado */
+.fwd{
+  display:flex;align-items:center;gap:4px;font-size:12.5px;font-style:italic;
+  color:rgba(233,237,239,.5);margin-bottom:2px;
+}
+.fwd svg{width:14px;height:14px;fill:currentColor}
+
+/* botón rápido de reenvío al costado */
+.qfwd{
+  align-self:center;display:grid;place-items:center;flex-shrink:0;
+  width:26px;height:26px;margin:0 6px;
+}
+.qfwd svg{width:20px;height:20px;fill:#e9edef;opacity:.9}
+
+/* imagen */
+.bubble.media{padding:3px 3px 5px;max-width:66%}
+.bubble.media img,.bubble.media .ph{
+  display:block;width:100%;border-radius:6px;object-fit:cover;
+}
+.bubble.media .ph{
+  height:150px;background:linear-gradient(135deg,#2c3b45,#1b262d);
+  display:grid;place-items:center;color:#6d818f;font-size:12px;gap:4px;
+}
+.bubble.media .ph svg{width:30px;height:30px;fill:currentColor;opacity:.75}
+.bubble.media .cap{padding:4px 5px 0;font-size:14.6px;line-height:19px}
+.bubble.media .meta{right:9px;bottom:4px}
+.bubble.media.nocap .metarow{
+  display:flex;justify-content:flex-end;padding:3px 4px 0 0;height:15px;
+}
+.bubble.media .meta.rel{position:static;justify-content:flex-end}
+
+/* audio */
+.bubble.audio{padding:7px 9px 7px 7px;min-width:230px;max-width:82%}
+.aud{display:flex;align-items:center;gap:8px}
+.aud .aav{width:42px;height:42px;border-radius:50%;object-fit:cover;background:#3b4a54;flex-shrink:0;position:relative}
+.aud .play{width:22px;height:22px;fill:var(--wa-icon);flex-shrink:0}
+.aud .wave{flex:1;display:flex;align-items:center;gap:2px;height:22px;min-width:0}
+.aud .wave i{flex:1;background:rgba(255,255,255,.38);border-radius:2px;display:block;min-width:1px}
+.bubble.audio .adur{
+  font-size:11px;color:var(--wa-meta-out);margin-top:1px;padding-left:30px;display:flex;
+  align-items:center;gap:5px;
+}
+.bubble.in.audio .adur{color:var(--wa-meta)}
+.adur .mic{width:14px;height:14px;flex-shrink:0;display:block}
+.adur .mic svg{width:14px;height:14px;display:block;fill:#60d3a4}
+.bubble.in .adur .mic svg{fill:#8696a0}
+
+/* fecha / sistema */
+.sysrow{display:flex;justify-content:center;margin:10px 0 6px}
+.sysbox{
+  background:#1f2c34;color:#8696a0;font-size:12.2px;border-radius:7px;padding:5px 12px;
+  box-shadow:0 1px .5px rgba(11,20,26,.13);text-align:center;max-width:85%;line-height:17px;
+}
+.sysbox.enc{background:#182229;color:#ffd279;font-size:11.6px}
+
+/* barra de escritura */
+.wa-foot{flex-shrink:0;padding:5px 8px 7px;display:flex;align-items:flex-end;gap:7px;background:var(--wa-chat)}
+.inputbar{
+  flex:1;background:var(--wa-input);border-radius:25px;display:flex;align-items:center;
+  gap:9px;padding:9px 12px;min-height:46px;
+}
+.inputbar .ph{flex:1;color:#8696a0;font-size:15.5px}
+.inputbar svg{width:22px;height:22px;fill:var(--wa-icon);flex-shrink:0;display:block}
+.inputbar .clip{transform:rotate(-45deg)}
+.micbtn{
+  width:46px;height:46px;border-radius:50%;background:#21c063;display:grid;place-items:center;flex-shrink:0;
+}
+.micbtn svg{width:22px;height:22px;fill:#0b141a}
+
+/* nav android */
+.navbar{
+  height:34px;background:var(--wa-status);flex-shrink:0;display:flex;align-items:center;
+  justify-content:space-around;padding:0 60px;
+}
+.navbar svg{width:14px;height:14px;fill:none;stroke:#e9edef;stroke-width:1.6}
+.navbar .tri{fill:#e9edef;stroke:none;width:12px;height:12px}
+
+@media (max-width:1080px){
+  .app{grid-template-columns:340px 1fr}
+  .phone{width:360px;height:760px}
+}
+@media (max-width:820px){
+  .app{grid-template-columns:1fr;height:auto;overflow:visible}
+  body{overflow:auto}
+  .sidebar{border-right:0;border-bottom:1px solid var(--ui-border);max-height:none;overflow:visible}
+  .side-scroll{overflow:visible}
+  .stage{padding:16px}
+  .stage-bar{position:sticky;top:8px;right:auto;align-self:flex-end}
+}
+
+/* toast */
+.toast{
+  position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:#1e222a;border:1px solid var(--ui-border);color:var(--ui-text);
+  padding:10px 16px;border-radius:9px;font-size:12.5px;z-index:50;opacity:0;
+  transition:.25s;pointer-events:none;box-shadow:0 10px 30px rgba(0,0,0,.5);
+}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- ================= SIDEBAR ================= -->
+  <aside class="sidebar">
+    <div class="side-head">
+      <div class="logo">
+        <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.4A10 10 0 1 0 12 2zm5.3 14.2c-.2.6-1.2 1.2-1.7 1.2-.5.1-1 .1-1.6-.1-.4-.1-.9-.3-1.5-.6-2.6-1.1-4.3-3.8-4.4-4-.1-.2-1-1.4-1-2.6s.6-1.8.9-2.1c.2-.2.5-.3.7-.3h.5c.2 0 .4 0 .6.5s.8 2 .9 2.1c.1.1.1.3 0 .5s-.1.3-.3.5l-.4.4c-.1.1-.3.3-.1.6.1.3.7 1.2 1.5 1.9 1 .9 1.8 1.1 2.1 1.3.3.1.4.1.6-.1s.7-.8.9-1.1c.2-.3.4-.2.6-.1l1.9.9c.2.1.4.2.5.3.1.2.1.7-.1 1.3z"/></svg>
+      </div>
+      <div>
+        <h1>Fake Chat WhatsApp</h1>
+        <p>Generador de conversaciones</p>
+      </div>
+    </div>
+
+    <div class="side-scroll">
+
+      <!-- Contacto -->
+      <div class="sec">
+        <div class="sec-t">Contacto</div>
+        <div class="row-f">
+          <label class="f">Nombre</label>
+          <input type="text" id="cName" placeholder="Ayelen Segovia">
+        </div>
+        <div class="row-f">
+          <label class="f">Estado (debajo del nombre · opcional)</label>
+          <input type="text" id="cSub" placeholder="en línea / últ. vez hoy a las 8:40">
+        </div>
+        <div class="row-f">
+          <label class="f">Foto de perfil</label>
+          <div class="btn-row">
+            <span class="btn sm file-btn">Subir foto<input type="file" id="cAvatar" accept="image/*"></span>
+            <button class="btn sm" id="cAvatarDel">Quitar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Teléfono -->
+      <div class="sec">
+        <div class="sec-t">Teléfono</div>
+        <div class="grid3 row-f">
+          <div>
+            <label class="f">Hora</label>
+            <input type="text" id="sTime" placeholder="1:15">
+          </div>
+          <div>
+            <label class="f">Batería</label>
+            <input type="number" id="sBatt" min="0" max="100">
+          </div>
+          <div>
+            <label class="f">Ancho</label>
+            <input type="number" id="pW" min="320" max="520" step="10">
+          </div>
+        </div>
+        <div class="grid2 row-f">
+          <div>
+            <label class="f">Alto</label>
+            <input type="number" id="pH" min="500" max="1400" step="10">
+          </div>
+          <div>
+            <label class="f">Batería baja (roja)</label>
+            <select id="sBattRed"><option value="1">Sí</option><option value="0">No</option></select>
+          </div>
+        </div>
+        <div class="grid2">
+          <label class="chk"><input type="checkbox" id="uNav"> Barra de navegación</label>
+          <label class="chk"><input type="checkbox" id="uDood"> Fondo con dibujos</label>
+        </div>
+      </div>
+
+      <!-- Mensajes -->
+      <div class="sec">
+        <div class="sec-t">Mensajes</div>
+        <div class="btn-row" style="margin-bottom:9px">
+          <button class="btn sm primary" data-add="text">+ Mensaje</button>
+          <button class="btn sm" data-add="image">+ Imagen</button>
+          <button class="btn sm" data-add="audio">+ Audio</button>
+          <button class="btn sm" data-add="date">+ Fecha</button>
+          <button class="btn sm" data-add="system">+ Sistema</button>
+        </div>
+        <div class="msg-list" id="list"></div>
+        <div class="hint">Arrastrá las tarjetas para reordenar. Tocá una burbuja en el celular para saltar a su tarjeta.</div>
+      </div>
+
+      <!-- Archivo -->
+      <div class="sec">
+        <div class="sec-t">Archivo</div>
+        <div class="btn-row">
+          <button class="btn sm" id="bSave">Guardar .json</button>
+          <span class="btn sm file-btn">Cargar .json<input type="file" id="bLoad" accept="application/json,.json"></span>
+          <button class="btn sm" id="bDemo">Chat de ejemplo</button>
+          <button class="btn sm" id="bClear">Vaciar</button>
+        </div>
+        <div class="hint">Se guarda solo en tu navegador. Nada se sube a ningún servidor.</div>
+      </div>
+
+    </div>
+  </aside>
+
+  <!-- ================= STAGE ================= -->
+  <main class="stage" id="stage">
+    <div class="stage-bar">
+      <button class="btn sm" id="zOut">−</button>
+      <span class="zoom-lbl" id="zLbl">100%</span>
+      <button class="btn sm" id="zIn">+</button>
+      <button class="btn sm primary" id="bPng">Descargar PNG</button>
+      <button class="btn sm" id="bPngFull">PNG completo</button>
+    </div>
+
+    <div class="phone-wrap" id="wrap">
+      <div class="phone" id="phone">
+
+        <div class="statusbar" id="statusbar">
+          <div class="sb-l">
+            <span class="t" id="sbTime">1:15</span>
+            <svg viewBox="0 0 24 24" style="width:12px;height:12px;fill:#fff"><path d="M12 3v10.6a4 4 0 1 0 2 3.4V7h4V3h-6z"/></svg>
+            <span class="dots"><i></i><i></i><i></i></span>
+          </div>
+          <div class="sb-r">
+            <svg viewBox="0 0 24 24"><path d="M17.7 7.7L12 2h-1v7.6L6.4 5 5 6.4l5.6 5.6L5 17.6 6.4 19 11 14.4V22h1l5.7-5.7-4.3-4.3 4.3-4.3zM13 5.8l1.9 1.9L13 9.6V5.8zm1.9 10.5L13 18.2v-3.8l1.9 1.9z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M3.4 2L2 3.4l3.5 3.5C5.2 7.6 5 8.4 5 9.3V15l-2 2v1h13.6l3 3 1.4-1.4L3.4 2zM19 15.3V9.3c0-3.1-1.6-5.6-4.5-6.3v-.7A1.5 1.5 0 0 0 13 .8a1.5 1.5 0 0 0-1.5 1.5v.7c-.6.1-1.1.3-1.6.6L19 15.3zM12 22a2 2 0 0 0 2-2h-4a2 2 0 0 0 2 2z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M2 22h3v-6H2v6zm5.5 0h3V11h-3v11zM13 22h3V6h-3v16zm5.5 0h3V2h-3v20z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M12 21l10.5-13C21.9 7.5 17.7 4 12 4S2.1 7.5 1.5 8L12 21z"/></svg>
+            <span class="batt" id="sbBatt">11</span>
+          </div>
+        </div>
+
+        <div class="wa-head">
+          <svg class="back" viewBox="0 0 24 24"><path d="M20 11H7.8l5.6-5.6L12 4l-8 8 8 8 1.4-1.4L7.8 13H20v-2z"/></svg>
+          <img class="av" id="hAvatar" alt="">
+          <div class="who">
+            <div class="nm" id="hName">Ayelen Segovia</div>
+            <div class="st" id="hSub" style="display:none"></div>
+          </div>
+          <div class="acts">
+            <svg viewBox="0 0 24 24"><path d="M17 10.5V7a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-3.5l4 4v-11l-4 4z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.6.1.3 0 .7-.2 1l-2.3 2.2z"/></svg>
+            <svg class="kebab" viewBox="0 0 5 22"><circle cx="2.5" cy="3" r="2.2"/><circle cx="2.5" cy="11" r="2.2"/><circle cx="2.5" cy="19" r="2.2"/></svg>
+          </div>
+        </div>
+
+        <div class="wa-chat" id="chat"></div>
+
+        <div class="wa-foot">
+          <div class="inputbar">
+            <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16zM8.5 9.5a1.3 1.3 0 1 1 2.6 0 1.3 1.3 0 0 1-2.6 0zm4.4 0a1.3 1.3 0 1 1 2.6 0 1.3 1.3 0 0 1-2.6 0zM12 17.5c-2.3 0-4.3-1.4-5.1-3.5h10.2c-.8 2.1-2.8 3.5-5.1 3.5z"/></svg>
+            <span class="ph">Mensaje</span>
+            <svg class="clip" viewBox="0 0 24 24"><path d="M16.5 6v11.5a4.5 4.5 0 1 1-9 0V5a3 3 0 1 1 6 0v10.5a1.5 1.5 0 1 1-3 0V6H9v9.5a3 3 0 1 0 6 0V5a4.5 4.5 0 1 0-9 0v12.5a6 6 0 1 0 12 0V6h-1.5z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4zM9 3L7.2 5H4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-3.2L15 3H9zm3 14a5 5 0 1 1 0-10 5 5 0 0 1 0 10z"/></svg>
+            <svg viewBox="0 0 24 24" style="width:18px;height:18px"><path d="M12 2l2.2 5.8L20 10l-5.8 2.2L12 18l-2.2-5.8L4 10l5.8-2.2L12 2zm7 10l.9 2.4 2.4.9-2.4.9-.9 2.4-.9-2.4-2.4-.9 2.4-.9.9-2.4z"/></svg>
+          </div>
+          <div class="micbtn">
+            <svg viewBox="0 0 24 24"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5.9-3c0 3-2.5 5.4-5.4 5.4S7.1 15 7.1 12H5.4c0 3.6 2.7 6.6 6.1 7.1V22h2.2v-2.9c3.4-.5 6.1-3.5 6.1-7.1h-1.9z"/></svg>
+          </div>
+        </div>
+
+        <div class="navbar" id="navbar">
+          <svg viewBox="0 0 14 14"><rect x="1.5" y="1.5" width="11" height="11" rx="1.5"/></svg>
+          <svg viewBox="0 0 14 14"><circle cx="7" cy="7" r="5.5"/></svg>
+          <svg class="tri" viewBox="0 0 12 12"><path d="M9 1L2 6l7 5V1z"/></svg>
+        </div>
+
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ==================== ICONOS ==================== */
+const ICON = {
+  tick1:'<svg viewBox="0 0 12 11" height="12"><path fill="currentColor" d="M11.1.35a.45.45 0 0 0-.63.07L4.71 7.69 1.88 5.18a.45.45 0 1 0-.59.67l3.2 2.84c.19.17.49.14.64-.06L11.16.98a.45.45 0 0 0-.06-.63z"/></svg>',
+  tick2:'<svg viewBox="0 0 16 11" height="12"><path fill="currentColor" d="M15.01 1.32l-.48-.37a.36.36 0 0 0-.51.06L8.67 7.88a.32.32 0 0 1-.49.03l-.35-.32a.32.32 0 0 0-.49.03l-.38.48a.42.42 0 0 0 .04.54l1.32 1.27c.14.14.36.12.48-.03l6.27-8.05a.37.37 0 0 0-.06-.51zm-4.1 0l-.48-.37a.36.36 0 0 0-.51.06L4.57 7.88a.32.32 0 0 1-.49.03L1.89 5.77a.37.37 0 0 0-.52.01l-.42.43a.36.36 0 0 0 .01.51l3.26 3.19c.14.14.36.12.48-.03l6.27-8.05a.37.37 0 0 0-.06-.51z"/></svg>',
+  fwd:'<svg viewBox="0 0 24 24"><path d="M12.5 7V3l7.5 6.5-7.5 6.5v-4.1c-4.2 0-7.2 1.3-9.5 4.3.9-4.6 3.7-9.2 9.5-9.2z"/></svg>',
+  qfwd:'<svg viewBox="0 0 24 24"><path d="M9 8V4l7 6-7 6v-4H2V8h7zm7.5 0V4l7 6-7 6v-4h-1.6l2.3-2-2.3-2h1.6z"/></svg>',
+  head:'<svg viewBox="0 0 24 24"><path d="M12 3a8 8 0 0 0-8 8v6a3 3 0 0 0 3 3h1a1 1 0 0 0 1-1v-6a1 1 0 0 0-1-1H6v-1a6 6 0 0 1 12 0v1h-2a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h1a3 3 0 0 0 3-3v-6a8 8 0 0 0-8-8z"/></svg>',
+  cam:'<svg viewBox="0 0 24 24"><path d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4zM9 3L7.2 5H4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-3.2L15 3H9z"/></svg>',
+  mic:'<svg viewBox="0 0 24 24"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5.9-3c0 3-2.5 5.4-5.4 5.4S7.1 15 7.1 12H5.4c0 3.6 2.7 6.6 6.1 7.1V22h2.2v-2.9c3.4-.5 6.1-3.5 6.1-7.1h-1.9z"/></svg>',
+  play:'<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>'
+};
+
+/* ==================== FONDO CON DIBUJOS ==================== */
+function doodleBg(){
+  const d = [
+    'M0,4a4,4 0 0 1 8,0a4,4 0 0 1 8,0c0,5-8,10-8,10S0,9,0,4z',
+    'M8,0l2,5.5 6,.5-4.5,4 1.5,6L8,12.8 3,16l1.5-6L0,6l6-.5z',
+    'M3,12a3,3 0 0 1 0-6a4.5,4.5 0 0 1 8.5-1a3.5,3.5 0 0 1 1,7z',
+    'M5,13a2,2 0 1 0 2.2-2V2l7-1.6v9.6a2,2 0 1 0 2.2-2',
+    'M0,8L18,1 11,16 8,10z',
+    'M1,8a7,7 0 0 1 14,0zM8,8v6a2,2 0 0 1-4,0',
+    'M9,0L2,9h5l-2,7L13,7H8z',
+    'M0,2q4,-2 8,0q4,-2 8,0v11q-4,-2 -8,0q-4,-2 -8,0zM8,2v11',
+    'M15,8a7,7 0 1 1-14,0a7,7 0 1 1 14,0M8,4v4.4l3,2',
+    'M1,3h11v6a4,4 0 0 1-11,0zM12,4.5h2a2,2 0 0 1 0,4h-2',
+    'M1,2h14a2,2 0 0 1 2,2v7a2,2 0 0 1-2,2H7l-4,3v-3H1a2,2 0 0 1-2-2V4a2,2 0 0 1 2-2z',
+    'M6,3l1.5-2.5h3L12,3M0,3h18v12H0z',
+    'M4,10a4,4 0 0 0 8,0M5,5.5v1.6M11,5.5v1.6',
+    'M7,13.5v4M5.5,17.5q1.5,1 3,0',
+    'M11,8a3,3 0 1 1-6,0a3,3 0 1 1 6,0M8,0v2M8,14v2M0,8h2M14,8h2M2.5,2.5l1.4,1.4M12.1,12.1l1.4,1.4M13.5,2.5l-1.4,1.4M3.9,12.1l-1.4,1.4',
+    'M0,6h16v9H0zM4,6V3a4,4 0 0 1 8,0v3'
+  ];
+  const pos = [
+    [18,20,0],[92,12,15],[168,26,-10],[236,18,8],
+    [10,86,-12],[70,74,6],[140,92,-8],[212,80,12],
+    [30,150,10],[100,140,-14],[176,158,5],[240,146,-6],
+    [16,214,-8],[86,206,12],[152,222,-10],[224,210,6]
+  ];
+  let g = '';
+  pos.forEach((p,i)=>{
+    g += '<g transform="translate('+p[0]+','+p[1]+') rotate('+p[2]+') scale(0.88)"><path d="'+d[i%d.length]+'"/></g>';
+  });
+  const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="280" height="280" viewBox="0 0 280 280">'+
+    '<g fill="none" stroke="#ffffff" stroke-opacity="0.055" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">'+g+'</g></svg>';
+  return 'url("data:image/svg+xml;utf8,'+encodeURIComponent(svg)+'")';
+}
+
+/* ==================== ESTADO ==================== */
+const PLACEHOLDER_AV = 'data:image/svg+xml;utf8,'+encodeURIComponent(
+  '<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80"><rect width="80" height="80" fill="#3b4a54"/><circle cx="40" cy="31" r="14" fill="#6b7f8b"/><path d="M12 78c0-16 12-26 28-26s28 10 28 26z" fill="#6b7f8b"/></svg>');
+
+const uid = () => Math.random().toString(36).slice(2,9);
+
+function demo(){
+  return {
+    contact:{ name:'Ayelen Segovia', sub:'', avatar:'' },
+    status:{ time:'1:15', batt:11, battRed:true },
+    ui:{ nav:true, doodles:true, w:400, h:844 },
+    messages:[
+      { id:uid(), side:'in', type:'text', text:'Y si', time:'8:46 a. m.', ticks:'none',
+        quote:{on:true, author:'Tú', text:'Pero yo confío en que aclara bastante las cosas', kind:'text', dur:''} },
+      { id:uid(), side:'in', type:'text', text:'Hace rato te dije eso', time:'8:46 a. m.', ticks:'none' },
+      { id:uid(), side:'in', type:'text', text:'A verrr jajajajaa', time:'8:46 a. m.', ticks:'none',
+        quote:{on:true, author:'Ayelen', text:'', kind:'audio', dur:'0:26'} },
+      { id:uid(), side:'in', type:'text', text:'Guiarse 100% por el tarot no', time:'8:46 a. m.', ticks:'none' },
+      { id:uid(), side:'in', type:'text', text:'Pero yo confío en que aclara bastante las cosas', time:'8:46 a. m.', ticks:'none' },
+      { id:uid(), side:'out', type:'text', text:'Dijo la posta y listo', time:'8:46 a. m.', ticks:'delivered' },
+      { id:uid(), side:'out', type:'text', text:'Estoy jodido', time:'8:46 a. m.', ticks:'delivered' },
+      { id:uid(), side:'out', type:'image', image:'', caption:'', time:'8:46 a. m.', ticks:'delivered', quickFwd:true },
+      { id:uid(), side:'out', type:'text', text:'Me va a costar mucho dejar a Laura', time:'8:47 a. m.', ticks:'delivered' },
+      { id:uid(), side:'out', type:'text', text:'Pero lo haré', time:'8:47 a. m.', ticks:'delivered' },
+      { id:uid(), side:'out', type:'text', text:'Porque me quiere en serio', time:'8:47 a. m.', ticks:'delivered' }
+    ]
+  };
+}
+
+let S = load() || demo();
+let openId = null;
+
+function load(){
+  try{
+    const raw = localStorage.getItem('wafake:v1');
+    if(!raw) return null;
+    const o = JSON.parse(raw);
+    if(!o || !Array.isArray(o.messages)) return null;
+    return o;
+  }catch(e){ return null; }
+}
+function save(){
+  try{ localStorage.setItem('wafake:v1', JSON.stringify(S)); }
+  catch(e){ /* imágenes grandes: se ignora */ }
+}
+
+const $  = s => document.querySelector(s);
+const esc = s => String(s==null?'':s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function toast(msg){
+  const t = $('#toast'); t.textContent = msg; t.classList.add('on');
+  clearTimeout(t._t); t._t = setTimeout(()=>t.classList.remove('on'), 2200);
+}
+
+/* ==================== RENDER: TELÉFONO ==================== */
+function tickHTML(k){
+  if(k==='none'||!k) return '';
+  const svg = k==='sent' ? ICON.tick1 : ICON.tick2;
+  return '<span class="tick '+k+'">'+svg+'</span>';
+}
+function metaHTML(m, rel){
+  if(!m.time && (!m.ticks || m.ticks==='none')) return '';
+  return '<span class="meta'+(rel?' rel':'')+'"><span class="t">'+esc(m.time)+'</span>'+
+         (m.side==='out'?tickHTML(m.ticks):'')+'</span>';
+}
+function quoteHTML(q, side){
+  if(!q || !q.on) return '';
+  let body;
+  if(q.kind==='audio'){
+    body = '<div class="qt media">'+ICON.head+'<span>Audio ('+esc(q.dur||'0:26')+')</span></div>';
+  }else if(q.kind==='image'){
+    body = '<div class="qt media">'+ICON.cam+'<span>'+esc(q.text||'Foto')+'</span></div>';
+  }else{
+    body = '<div class="qt">'+esc(q.text)+'</div>';
+  }
+  return '<div class="quote"><div class="bar"></div><div class="qc">'+
+         (q.author?'<div class="qa">'+esc(q.author)+'</div>':'')+body+'</div></div>';
+}
+function waveHTML(){
+  let w='';
+  const hs=[6,10,14,8,18,12,20,9,15,22,11,7,16,13,19,10,6,14,21,12,8,17,11,15,9,13,7,18,10,6];
+  hs.forEach(h => { w += '<i style="height:'+h+'px"></i>'; });
+  return '<div class="wave">'+w+'</div>';
+}
+
+function renderPhone(){
+  const chat = $('#chat');
+
+  // cabecera
+  $('#hName').textContent = S.contact.name || 'Contacto';
+  $('#hAvatar').src = S.contact.avatar || PLACEHOLDER_AV;
+  const sub = $('#hSub');
+  sub.textContent = S.contact.sub || '';
+  sub.style.display = S.contact.sub ? 'block' : 'none';
+
+  // barra de estado
+  $('#sbTime').textContent = S.status.time || '';
+  const b = $('#sbBatt');
+  b.textContent = (S.status.batt==null?'':S.status.batt);
+  b.style.background = S.status.battRed ? '#e04b4b' : 'transparent';
+  b.style.border = S.status.battRed ? '0' : '1.4px solid #fff';
+  b.style.color = '#fff';
+
+  // teléfono
+  const ph = $('#phone');
+  ph.style.width = (S.ui.w||400)+'px';
+  ph.style.height = (S.ui.h||844)+'px';
+  $('#navbar').style.display = S.ui.nav ? 'flex' : 'none';
+  chat.style.backgroundImage = S.ui.doodles ? doodleBg() : 'none';
+
+  // mensajes
+  let html = '';
+  let prevSide = null;
+  S.messages.forEach(m => {
+    if(m.type==='date' || m.type==='system'){
+      html += '<div class="sysrow" data-id="'+m.id+'"><div class="sysbox'+(m.type==='system'?' enc':'')+'">'+esc(m.text)+'</div></div>';
+      prevSide = null;
+      return;
+    }
+    const isNew = prevSide !== m.side;
+    const rowCls = 'row '+m.side+(isNew?' gap':'');
+    const tail = isNew ? ' tail' : '';
+    let inner = '';
+
+    if(m.type==='image'){
+      const cap = m.caption ? '<div class="cap">'+esc(m.caption)+'<span class="metaspace"></span></div>' : '';
+      const media = m.image
+        ? '<img src="'+m.image+'" alt="">'
+        : '<div class="ph">'+ICON.cam+'<span>Subí una imagen</span></div>';
+      inner = '<div class="bubble media'+(m.caption?'':' nocap')+' '+m.side+tail+'" data-id="'+m.id+'">'+
+              quoteHTML(m.quote,m.side)+ media + cap +
+              (m.caption ? metaHTML(m,false)
+                         : '<div class="metarow">'+metaHTML(m,true)+'</div>')+
+              '</div>';
+      if(m.quickFwd){
+        const q = '<div class="qfwd">'+ICON.qfwd+'</div>';
+        inner = (m.side==='out') ? q+inner : inner+q;
+      }
+    }else if(m.type==='audio'){
+      inner = '<div class="bubble audio '+m.side+tail+'" data-id="'+m.id+'">'+
+              quoteHTML(m.quote,m.side)+
+              '<div class="aud">'+
+                '<img class="aav" src="'+(m.side==='out'? (S.contact.avatar||PLACEHOLDER_AV) : (S.contact.avatar||PLACEHOLDER_AV))+'" alt="">'+
+                '<span class="play">'+ICON.play+'</span>'+ waveHTML() +
+              '</div>'+
+              '<div class="adur"><span class="mic">'+ICON.mic+'</span><span>'+esc(m.dur||'0:26')+'</span></div>'+
+              metaHTML(m,false)+'</div>';
+    }else{
+      const fwd = m.forwarded ? '<div class="fwd">'+ICON.fwd+'<span>Reenviado</span></div>' : '';
+      inner = '<div class="bubble '+m.side+tail+'" data-id="'+m.id+'">'+
+              fwd + quoteHTML(m.quote,m.side)+
+              '<span class="txt">'+esc(m.text)+'</span><span class="metaspace"></span>'+
+              metaHTML(m,false)+'</div>';
+    }
+
+    html += '<div class="'+rowCls+'" data-id="'+m.id+'">'+inner+'</div>';
+    prevSide = m.side;
+  });
+
+  const atBottom = chat.scrollHeight - chat.scrollTop - chat.clientHeight < 60;
+  chat.innerHTML = html;
+  fixMeta();
+  if(atBottom) chat.scrollTop = chat.scrollHeight;
+}
+
+/* reserva el espacio exacto de la hora en la última línea del texto */
+function fixMeta(){
+  document.querySelectorAll('#chat .bubble').forEach(bub => {
+    const meta = bub.querySelector(':scope > .meta');
+    const sp = bub.querySelector('.metaspace');
+    if(!meta || !sp) return;
+    sp.style.width = (meta.offsetWidth + 12) + 'px';
+  });
+}
+
+/* ==================== RENDER: EDITOR ==================== */
+const TYPES = [['text','Texto'],['image','Imagen'],['audio','Audio'],['date','Fecha'],['system','Sistema']];
+const TICKS = [['none','Sin check'],['sent','✓ Enviado'],['delivered','✓✓ Entregado'],['read','✓✓ Leído (azul)']];
+
+function opts(list, val){
+  return list.map(o => '<option value="'+o[0]+'"'+(o[0]===val?' selected':'')+'>'+o[1]+'</option>').join('');
+}
+
+function cardBody(m){
+  const isSys = m.type==='date' || m.type==='system';
+  let h = '<div class="grid2 row-f">'+
+    '<div><label class="f">Tipo</label><select data-f="type">'+opts(TYPES,m.type)+'</select></div>'+
+    (isSys ? '<div></div>' :
+     '<div><label class="f">Lado</label><select data-f="side">'+
+      '<option value="in"'+(m.side==='in'?' selected':'')+'>Contacto</option>'+
+      '<option value="out"'+(m.side==='out'?' selected':'')+'>Tú</option></select></div>')+
+    '</div>';
+
+  if(isSys){
+    h += '<div class="row-f"><label class="f">Texto</label><input type="text" data-f="text" value="'+esc(m.text)+'"></div>';
+    return h;
+  }
+
+  if(m.type==='text'){
+    h += '<div class="row-f"><label class="f">Mensaje</label><textarea data-f="text">'+esc(m.text)+'</textarea></div>';
+  }
+  if(m.type==='image'){
+    if(m.image) h += '<img class="thumb" src="'+m.image+'" alt="">';
+    h += '<div class="btn-row row-f">'+
+         '<span class="btn sm file-btn">Subir imagen<input type="file" data-f="imgfile" accept="image/*"></span>'+
+         (m.image?'<button class="btn sm" data-act="imgdel">Quitar</button>':'')+
+         '</div>'+
+         '<div class="row-f"><label class="f">Texto sobre la imagen (opcional)</label><textarea data-f="caption">'+esc(m.caption||'')+'</textarea></div>'+
+         '<div class="row-f"><label class="chk"><input type="checkbox" data-f="quickFwd"'+(m.quickFwd?' checked':'')+'> Flecha de reenvío al costado</label></div>';
+  }
+  if(m.type==='audio'){
+    h += '<div class="row-f"><label class="f">Duración</label><input type="text" data-f="dur" value="'+esc(m.dur||'0:26')+'" placeholder="0:26"></div>';
+  }
+  if(m.type==='text'){
+    h += '<div class="row-f"><label class="chk"><input type="checkbox" data-f="forwarded"'+(m.forwarded?' checked':'')+'> Marcar como “Reenviado”</label></div>';
+  }
+
+  h += '<div class="grid2 row-f">'+
+       '<div><label class="f">Hora</label><input type="text" data-f="time" value="'+esc(m.time||'')+'" placeholder="8:46 a. m."></div>'+
+       '<div><label class="f">Checks</label><select data-f="ticks"'+(m.side==='in'?' disabled':'')+'>'+opts(TICKS,m.ticks||'none')+'</select></div>'+
+       '</div>';
+
+  const q = m.quote || {};
+  h += '<div class="row-f"><label class="chk"><input type="checkbox" data-f="qon"'+(q.on?' checked':'')+'> Responde a un mensaje</label></div>';
+  if(q.on){
+    h += '<div class="grid2 row-f">'+
+         '<div><label class="f">Autor</label><input type="text" data-f="qauthor" value="'+esc(q.author||'')+'" placeholder="Tú"></div>'+
+         '<div><label class="f">Tipo</label><select data-f="qkind">'+
+           opts([['text','Texto'],['audio','Audio'],['image','Foto']], q.kind||'text')+'</select></div>'+
+         '</div>';
+    if((q.kind||'text')==='audio'){
+      h += '<div class="row-f"><label class="f">Duración del audio citado</label><input type="text" data-f="qdur" value="'+esc(q.dur||'0:26')+'"></div>';
+    }else{
+      h += '<div class="row-f"><label class="f">Texto citado</label><textarea data-f="qtext">'+esc(q.text||'')+'</textarea></div>';
+    }
+  }
+  return h;
+}
+
+function preview(m){
+  if(m.type==='image') return m.caption ? m.caption : '📷 Foto';
+  if(m.type==='audio') return '🎧 Audio ('+(m.dur||'0:26')+')';
+  return m.text || '(vacío)';
+}
+
+function renderList(){
+  const list = $('#list');
+  list.innerHTML = S.messages.map(m => {
+    const isSys = m.type==='date'||m.type==='system';
+    const who = (S.contact.name||'Contacto').trim().split(/\s+/)[0].slice(0,9);
+    const badge = isSys ? '<span class="badge sys">'+(m.type==='date'?'Fecha':'Sist.')+'</span>'
+      : '<span class="badge '+m.side+'">'+esc(m.side==='out'?'Tú':who)+'</span>';
+    return '<div class="card'+(openId===m.id?' open':'')+'" data-id="'+m.id+'" draggable="true">'+
+      '<div class="card-h">'+
+        '<span class="handle">⣿</span>'+ badge +
+        '<span class="prev">'+esc(preview(m))+'</span>'+
+        '<button class="mini" data-act="up" title="Subir">↑</button>'+
+        '<button class="mini" data-act="down" title="Bajar">↓</button>'+
+        '<button class="mini" data-act="dup" title="Duplicar">⧉</button>'+
+        '<button class="mini del" data-act="del" title="Borrar">✕</button>'+
+      '</div>'+
+      '<div class="card-b">'+(openId===m.id?cardBody(m):'')+'</div>'+
+    '</div>';
+  }).join('');
+}
+
+function render(){ renderPhone(); renderList(); save(); }
+
+/* ==================== ACCIONES ==================== */
+function find(id){ return S.messages.find(m => m.id===id); }
+function idxOf(id){ return S.messages.findIndex(m => m.id===id); }
+
+function addMsg(type){
+  const last = S.messages[S.messages.length-1];
+  const m = {
+    id: uid(),
+    side: last && last.side==='out' ? 'out' : (last ? 'in' : 'out'),
+    type: type,
+    text: type==='date' ? 'HOY' : (type==='system' ? 'Los mensajes están cifrados de extremo a extremo.' : ''),
+    time: last && last.time ? last.time : '8:46 a. m.',
+    ticks: 'delivered',
+    dur: '0:26',
+    caption:'', image:''
+  };
+  if(type==='date'||type==='system'){ m.side='in'; }
+  S.messages.push(m);
+  openId = m.id;
+  render();
+  const card = document.querySelector('.card[data-id="'+m.id+'"]');
+  if(card) card.scrollIntoView({block:'center', behavior:'smooth'});
+}
+
+document.querySelectorAll('[data-add]').forEach(b => {
+  b.addEventListener('click', () => addMsg(b.dataset.add));
+});
+
+/* --- eventos del listado --- */
+$('#list').addEventListener('click', e => {
+  const card = e.target.closest('.card'); if(!card) return;
+  const id = card.dataset.id;
+  const act = e.target.closest('[data-act]');
+
+  if(act){
+    e.stopPropagation();
+    const a = act.dataset.act, i = idxOf(id);
+    if(a==='up' && i>0){ const t=S.messages[i-1]; S.messages[i-1]=S.messages[i]; S.messages[i]=t; }
+    if(a==='down' && i<S.messages.length-1){ const t=S.messages[i+1]; S.messages[i+1]=S.messages[i]; S.messages[i]=t; }
+    if(a==='dup'){ const c = JSON.parse(JSON.stringify(S.messages[i])); c.id = uid(); S.messages.splice(i+1,0,c); openId=c.id; }
+    if(a==='del'){ S.messages.splice(i,1); if(openId===id) openId=null; }
+    if(a==='imgdel'){ find(id).image=''; }
+    render();
+    return;
+  }
+  if(e.target.closest('.card-b')) return;   // no cerrar al tocar campos
+  openId = (openId===id) ? null : id;
+  renderList();
+});
+
+$('#list').addEventListener('input', e => {
+  const card = e.target.closest('.card'); if(!card) return;
+  const m = find(card.dataset.id); if(!m) return;
+  const f = e.target.dataset.f; if(!f) return;
+  const v = e.target.type==='checkbox' ? e.target.checked : e.target.value;
+  applyField(m, f, v);
+  renderPhone(); save();
+  if(f==='text'||f==='caption'||f==='dur'){
+    const p = card.querySelector('.prev'); if(p) p.textContent = preview(m);
+  }
+});
+
+$('#list').addEventListener('change', e => {
+  const card = e.target.closest('.card'); if(!card) return;
+  const m = find(card.dataset.id); if(!m) return;
+  const f = e.target.dataset.f; if(!f) return;
+
+  if(f==='imgfile'){
+    const file = e.target.files && e.target.files[0]; if(!file) return;
+    const r = new FileReader();
+    r.onload = ev => { m.image = ev.target.result; render(); };
+    r.readAsDataURL(file);
+    return;
+  }
+  const v = e.target.type==='checkbox' ? e.target.checked : e.target.value;
+  applyField(m, f, v);
+  // estos cambios re-dibujan el formulario
+  if(['type','side','qon','qkind'].includes(f)) render();
+  else { renderPhone(); save(); }
+});
+
+function applyField(m, f, v){
+  if(f==='qon'||f==='qauthor'||f==='qtext'||f==='qkind'||f==='qdur'){
+    m.quote = m.quote || {on:false, author:'', text:'', kind:'text', dur:'0:26'};
+    if(f==='qon') m.quote.on = v;
+    if(f==='qauthor') m.quote.author = v;
+    if(f==='qtext') m.quote.text = v;
+    if(f==='qkind') m.quote.kind = v;
+    if(f==='qdur') m.quote.dur = v;
+    return;
+  }
+  if(f==='side'){ m.side = v; if(v==='in') m.ticks='none'; else if(m.ticks==='none') m.ticks='delivered'; return; }
+  m[f] = v;
+}
+
+/* --- drag & drop en el listado --- */
+let dragId = null;
+$('#list').addEventListener('dragstart', e => {
+  const c = e.target.closest('.card'); if(!c) return;
+  dragId = c.dataset.id; e.dataTransfer.effectAllowed='move';
+  try{ e.dataTransfer.setData('text/plain', dragId); }catch(_){}
+});
+$('#list').addEventListener('dragover', e => {
+  e.preventDefault();
+  const c = e.target.closest('.card');
+  document.querySelectorAll('.card.drag-over').forEach(x=>x.classList.remove('drag-over'));
+  if(c && c.dataset.id!==dragId) c.classList.add('drag-over');
+});
+$('#list').addEventListener('dragleave', e => {
+  const c = e.target.closest('.card'); if(c) c.classList.remove('drag-over');
+});
+$('#list').addEventListener('drop', e => {
+  e.preventDefault();
+  document.querySelectorAll('.card.drag-over').forEach(x=>x.classList.remove('drag-over'));
+  const c = e.target.closest('.card'); if(!c || !dragId || c.dataset.id===dragId) return;
+  const from = idxOf(dragId), to = idxOf(c.dataset.id);
+  if(from<0||to<0) return;
+  const [it] = S.messages.splice(from,1);
+  S.messages.splice(to,0,it);
+  dragId = null;
+  render();
+});
+
+/* --- click en burbuja → abrir su tarjeta --- */
+$('#chat').addEventListener('click', e => {
+  const row = e.target.closest('[data-id]'); if(!row) return;
+  openId = row.dataset.id;
+  renderList();
+  const card = document.querySelector('.card[data-id="'+openId+'"]');
+  if(card){
+    card.scrollIntoView({block:'center', behavior:'smooth'});
+    card.classList.add('hl');
+    setTimeout(()=>card.classList.remove('hl'), 1200);
+  }
+});
+
+/* --- ajustes globales --- */
+function bind(sel, fn, ev){
+  const el = $(sel);
+  el.addEventListener(ev||'input', () => { fn(el); renderPhone(); save(); });
+}
+bind('#cName', el => { S.contact.name = el.value; renderList(); });
+bind('#cSub',  el => S.contact.sub  = el.value);
+bind('#sTime', el => S.status.time  = el.value);
+bind('#sBatt', el => S.status.batt  = el.value===''?'':parseInt(el.value,10));
+bind('#sBattRed', el => S.status.battRed = el.value==='1', 'change');
+bind('#pW', el => S.ui.w = parseInt(el.value,10)||400);
+bind('#pH', el => S.ui.h = parseInt(el.value,10)||844);
+bind('#uNav',  el => S.ui.nav = el.checked, 'change');
+bind('#uDood', el => S.ui.doodles = el.checked, 'change');
+
+$('#cAvatar').addEventListener('change', e => {
+  const f = e.target.files && e.target.files[0]; if(!f) return;
+  const r = new FileReader();
+  r.onload = ev => { S.contact.avatar = ev.target.result; renderPhone(); save(); };
+  r.readAsDataURL(f);
+});
+$('#cAvatarDel').addEventListener('click', () => { S.contact.avatar=''; renderPhone(); save(); });
+
+function fillSettings(){
+  $('#cName').value = S.contact.name || '';
+  $('#cSub').value  = S.contact.sub || '';
+  $('#sTime').value = S.status.time || '';
+  $('#sBatt').value = S.status.batt==null?'':S.status.batt;
+  $('#sBattRed').value = S.status.battRed ? '1':'0';
+  $('#pW').value = S.ui.w||400;
+  $('#pH').value = S.ui.h||844;
+  $('#uNav').checked = !!S.ui.nav;
+  $('#uDood').checked = !!S.ui.doodles;
+}
+
+/* --- archivo --- */
+$('#bSave').addEventListener('click', () => {
+  const blob = new Blob([JSON.stringify(S,null,2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'chat-whatsapp.json';
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
+});
+$('#bLoad').addEventListener('change', e => {
+  const f = e.target.files && e.target.files[0]; if(!f) return;
+  const r = new FileReader();
+  r.onload = ev => {
+    try{
+      const o = JSON.parse(ev.target.result);
+      if(!o.messages) throw 0;
+      S = o; openId = null; fillSettings(); render(); toast('Chat cargado');
+    }catch(_){ toast('El archivo no es válido'); }
+  };
+  r.readAsText(f);
+  e.target.value = '';
+});
+$('#bDemo').addEventListener('click', () => { S = demo(); openId=null; fillSettings(); render(); toast('Chat de ejemplo cargado'); });
+$('#bClear').addEventListener('click', () => {
+  if(!confirm('¿Borrar todos los mensajes?')) return;
+  S.messages = []; openId = null; render();
+});
+
+/* --- zoom --- */
+let zoom = 1;
+function applyZoom(){
+  $('#wrap').style.transform = 'scale('+zoom+')';
+  $('#zLbl').textContent = Math.round(zoom*100)+'%';
+}
+$('#zIn').addEventListener('click', () => { zoom = Math.min(1.6, zoom+0.1); applyZoom(); });
+$('#zOut').addEventListener('click', () => { zoom = Math.max(0.4, zoom-0.1); applyZoom(); });
+
+/* --- exportar PNG (sin librerías externas: SVG + foreignObject) --- */
+function pageCSS(){
+  return [...document.querySelectorAll('style')].map(s => s.textContent).join('\n');
+}
+
+async function capture(full){
+  const phone = $('#phone'), chat = $('#chat');
+  const scrollTop = chat.scrollTop;
+
+  // clon fuera de pantalla para medir y serializar
+  const clone = phone.cloneNode(true);
+  clone.id = 'phone-export';
+  clone.style.position = 'absolute';
+  clone.style.left = '-10000px';
+  clone.style.top = '0';
+  clone.style.boxShadow = 'none';
+
+  const cChat = clone.querySelector('#chat');
+  cChat.removeAttribute('id');
+  cChat.className = 'wa-chat';
+  cChat.style.overflow = 'hidden';
+
+  if(full){
+    clone.style.height = 'auto';
+    cChat.style.overflow = 'visible';
+    cChat.style.flex = 'none';
+  }else{
+    // reproducir el scroll actual
+    const inner = document.createElement('div');
+    while(cChat.firstChild) inner.appendChild(cChat.firstChild);
+    inner.style.marginTop = (-scrollTop) + 'px';
+    cChat.appendChild(inner);
+  }
+
+  document.body.appendChild(clone);
+  await new Promise(r => setTimeout(r, 30));
+  const w = clone.offsetWidth, h = clone.offsetHeight;
+
+  let markup;
+  try{ markup = new XMLSerializer().serializeToString(clone); }
+  catch(e){ document.body.removeChild(clone); toast('No se pudo generar la imagen'); return; }
+  document.body.removeChild(clone);
+
+  markup = markup.replace(/position:\s*absolute;?/i,'').replace(/left:\s*-10000px;?/i,'');
+
+  const svg =
+    '<svg xmlns="http://www.w3.org/2000/svg" width="'+w+'" height="'+h+'">'+
+      '<foreignObject x="0" y="0" width="'+w+'" height="'+h+'">'+
+        '<div xmlns="http://www.w3.org/1999/xhtml" style="width:'+w+'px;height:'+h+'px">'+
+          '<style><![CDATA[\n'+pageCSS()+'\n]]></style>'+ markup +
+        '</div>'+
+      '</foreignObject>'+
+    '</svg>';
+
+  try{
+    const url = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+    const img = new Image();
+    await new Promise((res, rej) => {
+      img.onload = res;
+      img.onerror = () => rej(new Error('svg'));
+      img.src = url;
+    });
+    const scale = 2;
+    const canvas = document.createElement('canvas');
+    canvas.width = w*scale; canvas.height = h*scale;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#0b141a';
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.setTransform(scale,0,0,scale,0,0);
+    ctx.drawImage(img, 0, 0);
+
+    const a = document.createElement('a');
+    a.href = canvas.toDataURL('image/png');
+    a.download = full ? 'chat-completo.png' : 'chat.png';
+    a.click();
+    toast('Imagen descargada');
+  }catch(err){
+    toast('No se pudo generar la imagen en este navegador');
+  }
+}
+$('#bPng').addEventListener('click', () => capture(false));
+$('#bPngFull').addEventListener('click', () => capture(true));
+
+/* --- init --- */
+fillSettings();
+render();
+applyZoom();
+window.addEventListener('resize', fixMeta);
+</script>
+</body>
+</html>
