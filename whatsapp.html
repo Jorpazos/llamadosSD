@@ -21,6 +21,7 @@
   --wa-status:#000000;
   --wa-header:#0b141a;
   --wa-chat:#0b141a;
+  --wa-wall:#0e1f28;
   --wa-in:#1f2c34;
   --wa-out:#005c4b;
   --wa-text:#e9edef;
@@ -84,6 +85,11 @@ select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml;u
 .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
 .row-f{margin-bottom:9px}
 
+input[type=color]{
+  width:100%;height:31px;padding:2px;background:var(--ui-raised);
+  border:1px solid var(--ui-border);border-radius:8px;cursor:pointer;
+}
+input[type=range]{width:100%;accent-color:var(--ui-accent);cursor:pointer;height:31px}
 .chk{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--ui-text);cursor:pointer;user-select:none}
 .chk input{width:15px;height:15px;accent-color:var(--ui-accent);cursor:pointer;flex-shrink:0}
 
@@ -202,8 +208,8 @@ select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml;u
 /* --- chat --- */
 .wa-chat{
   flex:1;overflow-y:auto;overflow-x:hidden;padding:8px 8px 10px;
-  display:flex;flex-direction:column;background-color:var(--wa-chat);
-  background-repeat:repeat;background-size:560px 560px;
+  display:flex;flex-direction:column;background-color:var(--wa-wall);
+  background-position:center;
   scrollbar-width:none;
 }
 .wa-chat::-webkit-scrollbar{width:0;display:none}
@@ -425,10 +431,54 @@ select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml;u
             <select id="sBattRed"><option value="1">Sí</option><option value="0">No</option></select>
           </div>
         </div>
-        <div class="grid2">
-          <label class="chk"><input type="checkbox" id="uNav"> Barra de navegación</label>
-          <label class="chk"><input type="checkbox" id="uDood"> Fondo con dibujos</label>
+        <label class="chk"><input type="checkbox" id="uNav"> Barra de navegación</label>
+      </div>
+
+      <!-- Fondo -->
+      <div class="sec">
+        <div class="sec-t">Fondo del chat</div>
+        <div class="grid2 row-f">
+          <div>
+            <label class="f">Tipo</label>
+            <select id="uWall">
+              <option value="doodles">Garabatos</option>
+              <option value="image">Imagen propia</option>
+              <option value="plain">Liso</option>
+            </select>
+          </div>
+          <div>
+            <label class="f">Color base</label>
+            <input type="text" id="uBgHex" placeholder="#0e1f28">
+          </div>
         </div>
+        <div class="grid2 row-f">
+          <div>
+            <label class="f">Elegir color</label>
+            <input type="color" id="uBg">
+          </div>
+          <div>
+            <label class="f">Intensidad dibujos</label>
+            <input type="range" id="uDop" min="2" max="22" step="1">
+          </div>
+        </div>
+        <div class="grid2 row-f">
+          <div>
+            <label class="f">Ajuste de la imagen</label>
+            <select id="uWallFit">
+              <option value="tile">Mosaico (repetir)</option>
+              <option value="cover">Cubrir pantalla</option>
+            </select>
+          </div>
+          <div>
+            <label class="f">Escala del mosaico</label>
+            <input type="range" id="uWallScale" min="40" max="200" step="5">
+          </div>
+        </div>
+        <div class="btn-row">
+          <span class="btn sm file-btn">Subir fondo<input type="file" id="uWallImg" accept="image/*"></span>
+          <button class="btn sm" id="uWallDel">Quitar</button>
+        </div>
+        <div class="hint" id="wallHint"></div>
       </div>
 
       <!-- Mensajes -->
@@ -557,7 +607,7 @@ const DOODLES = [
   /* avión     */ 'M1,11L23,2L14,22L10.5,13.5ZM10.5,13.5L23,2',
   /* paraguas  */ 'M1.5,12A10.5,10.5 0 0 1 22.5,12ZM12,12v7.5a3,3 0 0 1 -6,0',
   /* sol       */ 'M16.5,12a4.5,4.5 0 1 0 -9,0a4.5,4.5 0 1 0 9,0M12,1.5V4M12,20v2.5M1.5,12H4M20,12h2.5M4.2,4.2L6,6M18,18l1.8,1.8M19.8,4.2L18,6M6,18l-1.8,1.8',
-  /* luna      */ 'M15.5,2A10,10 0 1 0 21.5,13A8,8 0 0 1 15.5,2Z',
+  /* luna      */ 'M20.5,14.2A9.5,9.5 0 1 1 9.8,3.5A7.5,7.5 0 0 0 20.5,14.2Z',
   /* nube      */ 'M6.5,19h11a4.5,4.5 0 0 0 0,-9a6.5,6.5 0 0 0 -12.4,-1.2A4.6,4.6 0 0 0 6.5,19Z',
   /* rayo      */ 'M13.5,1.5L4,13.5h6L8,22.5L19.5,10H13Z',
   /* libro     */ 'M2,4q5,-2.5 10,0q5,-2.5 10,0v15q-5,-2.5 -10,0q-5,-2.5 -10,0ZM12,4v15',
@@ -565,7 +615,7 @@ const DOODLES = [
   /* bombita   */ 'M12,2A7,7 0 0 0 8,14.8V17h8v-2.2A7,7 0 0 0 12,2ZM9.5,19.5h5M10.5,22h3',
   /* globo     */ 'M18,9a6,7.5 0 1 0 -12,0a6,7.5 0 1 0 12,0M12,16.5v2.5M10,22q2,1.5 4,0',
   /* hoja      */ 'M2.5,21.5C2.5,10 9.5,2.5 21.5,2.5C21.5,14 14.5,21.5 2.5,21.5ZM2.5,21.5L21.5,2.5',
-  /* helado    */ 'M6,9.5L12,22L18,9.5ZM6,9.5a6,6 0 0 1 12,0',
+  /* helado    */ 'M6,9.5L12,22L18,9.5ZM6,9.5a6,6 0 0 1 12,0M8,13.5h8M9.5,17h5',
   /* anteojos  */ 'M9,13a4,4 0 1 1 -8,0a4,4 0 1 1 8,0M23,13a4,4 0 1 1 -8,0a4,4 0 1 1 8,0M9,12.5q3,-1.5 6,0',
   /* auricular */ 'M3,15.5V12a9,9 0 0 1 18,0v3.5M1.5,14h4v7h-4ZM18.5,14h4v7h-4Z',
   /* sobre     */ 'M1.5,5h21v14h-21ZM1.5,5L12,13.5L22.5,5',
@@ -577,33 +627,92 @@ const DOODLES = [
   /* pesa      */ 'M2,9h2.5v6H2ZM19.5,9H22v6h-2.5ZM4.5,10.5h15v3h-15Z',
   /* copa      */ 'M7,3h10v5a5,5 0 0 1 -10,0ZM7,4.5H4a3,3 0 0 0 3,3.5M17,4.5h3a3,3 0 0 1 -3,3.5M12,13v4M8.5,21h7v-1.5a1,1 0 0 0 -1,-1h-5a1,1 0 0 0 -1,1Z',
   /* diamante  */ 'M12,2L20,9.5L12,22L4,9.5ZM4,9.5h16M8,9.5L12,2M16,9.5L12,2',
-  /* cohete    */ 'M12,1.5c4,3 6,7.5 6,12l-3,3h-6l-3,-3c0,-4.5 2,-9 6,-12ZM9,16.5l-2.5,5 4,-2M15,16.5l2.5,5 -4,-2M13.8,9.5a1.8,1.8 0 1 0 -3.6,0a1.8,1.8 0 1 0 3.6,0'
+  /* cohete    */ 'M12,1.5c4,3 6,7.5 6,12l-3,3h-6l-3,-3c0,-4.5 2,-9 6,-12ZM9,16.5l-2.5,5 4,-2M15,16.5l2.5,5 -4,-2M13.8,9.5a1.8,1.8 0 1 0 -3.6,0a1.8,1.8 0 1 0 3.6,0',
+  /* pulgar    */ 'M7,10.5L11,2.5a2.5,2.5 0 0 1 2.5,3.5L12.5,9h6a2,2 0 0 1 2,2.4l-1.6,7.2a2,2 0 0 1 -2,1.4H7ZM7,10.5v10H3.5v-10Z',
+  /* celular   */ 'M6.5,1.5h11a1.5,1.5 0 0 1 1.5,1.5v18a1.5,1.5 0 0 1 -1.5,1.5h-11A1.5,1.5 0 0 1 5,21V3a1.5,1.5 0 0 1 1.5,-1.5ZM10,4h4M12,19.5h0.1',
+  /* sol gafas */ 'M22,12A10,10 0 1 1 2,12A10,10 0 1 1 22,12M6,9h4.5v2.5a2.2,2.2 0 0 1 -4.5,0ZM13.5,9H18v2.5a2.2,2.2 0 0 1 -4.5,0ZM10.5,9.8h3M8,16.5q4,2 8,0',
+  /* robot     */ 'M5,8.5h14v10H5ZM8.5,12v1.5M15.5,12v1.5M2,9.5v6M22,9.5v6M8.5,5.5L7,3M15.5,5.5L17,3M8,18.5v3M16,18.5v3',
+  /* gato      */ 'M4.5,8.5L6.5,2.5L11,6h2l4.5,-3.5l2,6v5.5a7.5,7.5 0 0 1 -15,0ZM9,12h0.1M15,12h0.1M12,14.5l-1.5,1.5M12,14.5l1.5,1.5M1.5,14.5h4M18.5,14.5h4',
+  /* cámara vid*/ 'M2,6.5h11a1.5,1.5 0 0 1 1.5,1.5v8a1.5,1.5 0 0 1 -1.5,1.5H2A1.5,1.5 0 0 1 0.5,16V8A1.5,1.5 0 0 1 2,6.5ZM14.5,11L21,7.5v9L14.5,13Z',
+  /* planta    */ 'M12,21.5V9M12,12C12,12 5,12 5,5.5C11.5,5.5 12,12 12,12ZM12,12C12,12 19,11.5 19,5C12.5,5 12,12 12,12ZM7.5,21.5h9',
+  /* pizza     */ 'M12,2L22,20a22,22 0 0 1 -20,0ZM12,2 M4.5,15.5a17,17 0 0 1 15,0M10,10.5h0.1M14,13.5h0.1M9,16.5h0.1',
+  /* pelota    */ 'M22,12A10,10 0 1 1 2,12A10,10 0 1 1 22,12M12,6.5L16.8,10L15,15.6H9L7.2,10ZM12,2.5V6.5M20.5,9L16.8,10M17.5,19L15,15.6M6.5,19L9,15.6M3.5,9L7.2,10',
+  /* auto      */ 'M2,16.5v-4l2.5,-0.8L7.5,7h9l2.5,4.7l2,0.8v4ZM4.5,11.7h15M5.3,16.5a2.2,2.2 0 1 0 4.4,0a2.2,2.2 0 1 0 -4.4,0M14.8,16.5a2.2,2.2 0 1 0 4.4,0a2.2,2.2 0 1 0 -4.4,0'
 ];
 
-let _bgCache = null;
-function doodleBg(){
-  if(_bgCache) return _bgCache;
+/* rellenos chicos que van entre los dibujos grandes (caja 12x12) */
+const FILLERS = [
+  'M6,3a3,3 0 1 0 0.1,0',                                             /* circulito */
+  'M6,5.5h0.1',                                                        /* punto */
+  'M6,10.5C6,10.5 1.5,7.4 1.5,4.6C1.5,3.1 2.6,2 4,2C4.9,2 5.6,2.5 6,3.1C6.4,2.5 7.1,2 8,2C9.4,2 10.5,3.1 10.5,4.6C10.5,7.4 6,10.5 6,10.5Z', /* corazón */
+  'M6,0.5C6,3.5 8.5,6 11.5,6C8.5,6 6,8.5 6,11.5C6,8.5 3.5,6 0.5,6C3.5,6 6,3.5 6,0.5Z', /* destello */
+  'M6,1L7.4,4.4L11,4.7L8.3,7.1L9.1,10.7L6,8.8L2.9,10.7L3.7,7.1L1,4.7L4.6,4.4Z',        /* estrellita */
+  'M2.5,7.5a2,2 0 1 1 2,-2c0,2 -0.9,3.2 -2.4,4.2M8,7.5a2,2 0 1 1 2,-2c0,2 -0.9,3.2 -2.4,4.2',  /* comillas */
+  'M6,2v8M2,6h8',                                                      /* cruz */
+  'M2,9L6,2.5L10,9Z',                                                  /* triangulito */
+  'M6,2.5a3.5,3.5 0 1 0 0.1,0M6,2.5v3.5l2.4,1.5'                       /* relojito */
+];
 
-  const TILE = 560, CELLS = 8, CS = TILE/CELLS;
+const BG_TILE = 600;
+let _bgCache = {};
+function doodleBg(op){
+  const key = String(op);
+  if(_bgCache[key]) return _bgCache[key];
+
+  const CELLS = 10, CS = BG_TILE/CELLS;     /* dibujos grandes: uno cada 60px */
+  const FC = 20, FS = BG_TILE/FC;           /* rellenos: rejilla de 30px      */
   let seed = 987654321;
   const rnd = () => (seed = (seed*1664525 + 1013904223) % 4294967296) / 4294967296;
+
+  /* bolsa barajada: se usan todos los motivos antes de repetir ninguno */
+  const bag = (list => {
+    let pool = [];
+    return () => {
+      if(!pool.length){
+        pool = list.slice();
+        for(let i=pool.length-1;i>0;i--){
+          const j = Math.floor(rnd()*(i+1));
+          const t = pool[i]; pool[i] = pool[j]; pool[j] = t;
+        }
+      }
+      return pool.pop();
+    };
+  });
+  const nextDoodle = bag(DOODLES), nextFiller = bag(FILLERS);
 
   let g = '', k = 0;
   for(let r=0;r<CELLS;r++){
     for(let c=0;c<CELLS;c++){
-      const path = DOODLES[(k*7 + 5) % DOODLES.length];
-      const x  = (c*CS + 4 + rnd()*(CS-34)).toFixed(1);
-      const y  = (r*CS + 4 + rnd()*(CS-34)).toFixed(1);
+      const path = nextDoodle();
+      const x  = (c*CS + 1 + rnd()*(CS-30)).toFixed(1);
+      const y  = (r*CS + 1 + rnd()*(CS-30)).toFixed(1);
       const rot = Math.round(rnd()*64 - 32);
-      const sc  = (0.92 + rnd()*0.32).toFixed(2);
+      const sc  = (0.95 + rnd()*0.6).toFixed(2);
       g += '<g transform="translate('+x+','+y+') rotate('+rot+',12,12) scale('+sc+')"><path d="'+path+'"/></g>';
       k++;
     }
   }
-  const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="'+TILE+'" height="'+TILE+'" viewBox="0 0 '+TILE+' '+TILE+'">'+
-    '<g fill="none" stroke="#ffffff" stroke-opacity="0.07" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">'+g+'</g></svg>';
-  _bgCache = 'url("data:image/svg+xml;utf8,'+encodeURIComponent(svg)+'")';
-  return _bgCache;
+
+  let f = '', j = 0;
+  for(let r=0;r<FC;r++){
+    for(let c=0;c<FC;c++){
+      j++;
+      if(rnd() > 0.5) continue;             /* huecos, para que no sea una grilla */
+      const path = nextFiller();
+      const x  = (c*FS + 2 + rnd()*(FS-16)).toFixed(1);
+      const y  = (r*FS + 2 + rnd()*(FS-16)).toFixed(1);
+      const sc = (0.6 + rnd()*0.7).toFixed(2);
+      f += '<g transform="translate('+x+','+y+') scale('+sc+')"><path d="'+path+'"/></g>';
+    }
+  }
+
+  const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="'+BG_TILE+'" height="'+BG_TILE+'" viewBox="0 0 '+BG_TILE+' '+BG_TILE+'">'+
+    '<g fill="none" stroke="#cfe9ef" stroke-opacity="'+op+'" stroke-linecap="round" stroke-linejoin="round">'+
+      '<g stroke-width="1.5">'+g+'</g>'+
+      '<g stroke-width="1.3">'+f+'</g>'+
+    '</g></svg>';
+  _bgCache[key] = 'url("data:image/svg+xml;utf8,'+encodeURIComponent(svg)+'")';
+  return _bgCache[key];
 }
 
 /* ==================== ESTADO ==================== */
@@ -616,7 +725,8 @@ function demo(){
   return {
     contact:{ name:'Ayelen Segovia', sub:'', avatar:'' },
     status:{ time:'1:15', batt:11, battRed:true },
-    ui:{ nav:true, doodles:true, w:400, h:844 },
+    ui:{ nav:true, wall:'image', wallSet:false, bg:'#0e1f28', dop:0.09, wallImg:'',
+         wallFit:'tile', wallScale:100, w:400, h:844 },
     messages:[
       { id:uid(), side:'in', type:'text', text:'Y si', time:'8:46 a. m.', ticks:'none',
         quote:{on:true, author:'Tú', text:'Pero yo confío en que aclara bastante las cosas', kind:'text', dur:''} },
@@ -644,12 +754,91 @@ function load(){
     if(!raw) return null;
     const o = JSON.parse(raw);
     if(!o || !Array.isArray(o.messages)) return null;
-    return o;
+    return normalize(o);
   }catch(e){ return null; }
+}
+/* completa los campos que puedan faltar en chats guardados antes */
+function normalize(o){
+  const d = demo();
+  const ui = o.ui || {};
+  const hadWall = 'wall' in ui;          // ¿viene de una versión con fondos?
+  const oldDoodles = ui.doodles;         // versión vieja: solo un sí/no
+
+  o.contact = Object.assign({}, d.contact, o.contact||{});
+  o.status  = Object.assign({}, d.status,  o.status||{});
+  o.ui      = Object.assign({}, d.ui,      ui);
+
+  if(!hadWall){
+    o.ui.wall = (oldDoodles === false) ? 'plain' : 'image';
+    o.ui.wallSet = (oldDoodles === false);   // si eligió "sin dibujos", se respeta
+  }
+  delete o.ui.doodles;
+  return o;
 }
 function save(){
   try{ localStorage.setItem('wafake:v1', JSON.stringify(S)); }
   catch(e){ /* imágenes grandes: se ignora */ }
+}
+
+/* ---- fondo de imagen ----
+   Si en la misma carpeta existe fondo.png (o .jpg / .webp) se usa como fondo
+   por defecto: ahí va el mosaico original de WhatsApp. Si no está, se usa el
+   patrón dibujado. El que suba el usuario siempre tiene prioridad. */
+const WALL_FILES = ['fondo.png','fondo.jpg','fondo.webp'];
+let AUTO_WALL = '';
+const WALL_NAT = { w:0, h:0 };
+
+function wallpaperSrc(){ return S.ui.wallImg || AUTO_WALL; }
+
+function measureWall(src, done){
+  if(!src){ WALL_NAT.w = WALL_NAT.h = 0; if(done) done(); return; }
+  const im = new Image();
+  im.onload  = () => { WALL_NAT.w = im.naturalWidth; WALL_NAT.h = im.naturalHeight; if(done) done(); };
+  im.onerror = () => { WALL_NAT.w = WALL_NAT.h = 0; if(done) done(); };
+  im.src = src;
+}
+
+async function loadDefaultWallpaper(){
+  /* con file:// fetch no funciona; se va directo a la prueba con <img> */
+  for(const f of (location.protocol === 'file:' ? [] : WALL_FILES)){
+    try{
+      const r = await fetch(f, {cache:'force-cache'});
+      if(!r.ok) continue;
+      const blob = await r.blob();
+      if(!blob.size || !/^image\//.test(blob.type)) continue;
+      AUTO_WALL = await new Promise((res, rej) => {
+        const fr = new FileReader();
+        fr.onload = () => res(fr.result);
+        fr.onerror = rej;
+        fr.readAsDataURL(blob);
+      });
+      break;
+    }catch(e){ /* file:// bloquea fetch; se prueba abajo */ }
+  }
+  if(!AUTO_WALL && location.protocol === 'file:'){
+    // fallback para cuando se abre el html con doble clic (protocolo file://)
+    AUTO_WALL = await new Promise(res => {
+      let i = 0;
+      const probe = () => {
+        if(i >= WALL_FILES.length) return res('');
+        const f = WALL_FILES[i++];
+        const im = new Image();
+        im.onload  = () => res(f);
+        im.onerror = probe;
+        im.src = f;
+      };
+      probe();
+    });
+  }
+  if(!AUTO_WALL){
+    // no hay imagen: se cae al patrón dibujado
+    if(S.ui.wall === 'image' && !S.ui.wallImg){ S.ui.wall = 'doodles'; $('#uWall').value = 'doodles'; }
+    renderPhone();
+    return;
+  }
+  // hay imagen en el proyecto y el usuario no eligió otra cosa: se usa esa
+  if(!S.ui.wallSet && S.ui.wall !== 'image'){ S.ui.wall = 'image'; $('#uWall').value = 'image'; }
+  await new Promise(res => measureWall(wallpaperSrc(), () => { renderPhone(); res(); }));
 }
 
 const $  = s => document.querySelector(s);
@@ -714,7 +903,28 @@ function renderPhone(){
   ph.style.width = (S.ui.w||400)+'px';
   ph.style.height = (S.ui.h||844)+'px';
   $('#navbar').style.display = S.ui.nav ? 'flex' : 'none';
-  chat.style.backgroundImage = S.ui.doodles ? doodleBg() : 'none';
+
+  // fondo del chat
+  chat.style.backgroundColor = S.ui.bg || '#0e1f28';
+  const wall = wallpaperSrc();
+  if(S.ui.wall === 'image' && wall){
+    chat.style.backgroundImage = 'url("'+wall+'")';
+    if(S.ui.wallFit === 'cover'){
+      chat.style.backgroundSize = 'cover';
+      chat.style.backgroundRepeat = 'no-repeat';
+    }else{
+      const nw = WALL_NAT.w;
+      const sc = (S.ui.wallScale || 100)/100;
+      chat.style.backgroundSize = nw ? Math.round(nw*sc)+'px auto' : 'auto';
+      chat.style.backgroundRepeat = 'repeat';
+    }
+  }else if(S.ui.wall === 'plain'){
+    chat.style.backgroundImage = 'none';
+  }else{
+    chat.style.backgroundImage = doodleBg(S.ui.dop==null ? 0.09 : S.ui.dop);
+    chat.style.backgroundSize = BG_TILE+'px '+BG_TILE+'px';
+    chat.style.backgroundRepeat = 'repeat';
+  }
 
   // mensajes
   let html = '';
@@ -1023,7 +1233,46 @@ bind('#sBattRed', el => S.status.battRed = el.value==='1', 'change');
 bind('#pW', el => S.ui.w = parseInt(el.value,10)||400);
 bind('#pH', el => S.ui.h = parseInt(el.value,10)||844);
 bind('#uNav',  el => S.ui.nav = el.checked, 'change');
-bind('#uDood', el => S.ui.doodles = el.checked, 'change');
+bind('#uWall', el => { S.ui.wall = el.value; S.ui.wallSet = true; }, 'change');
+bind('#uDop',  el => S.ui.dop = parseInt(el.value,10)/200);
+bind('#uBg',   el => { S.ui.bg = el.value; $('#uBgHex').value = el.value; });
+bind('#uBgHex', el => {
+  const v = el.value.trim();
+  if(/^#[0-9a-f]{6}$/i.test(v)){ S.ui.bg = v; $('#uBg').value = v; }
+});
+
+bind('#uWallFit',   el => S.ui.wallFit = el.value, 'change');
+bind('#uWallScale', el => S.ui.wallScale = parseInt(el.value,10)||100);
+
+$('#uWallImg').addEventListener('change', e => {
+  const f = e.target.files && e.target.files[0]; if(!f) return;
+  const r = new FileReader();
+  r.onload = ev => {
+    S.ui.wallImg = ev.target.result;
+    S.ui.wall = 'image';
+    $('#uWall').value = 'image';
+    measureWall(S.ui.wallImg, () => { renderPhone(); wallHint(); save(); });
+    toast('Fondo cargado');
+  };
+  r.readAsDataURL(f);
+  e.target.value = '';
+});
+$('#uWallDel').addEventListener('click', () => {
+  S.ui.wallImg = '';
+  if(S.ui.wall === 'image' && !AUTO_WALL){ S.ui.wall = 'doodles'; $('#uWall').value = 'doodles'; }
+  measureWall(wallpaperSrc(), () => { renderPhone(); wallHint(); save(); });
+});
+
+function wallHint(){
+  const h = $('#wallHint');
+  if(S.ui.wallImg){
+    h.textContent = 'Usando la imagen que subiste ('+WALL_NAT.w+'×'+WALL_NAT.h+' px). Queda guardada en este navegador.';
+  }else if(AUTO_WALL){
+    h.textContent = 'Usando el fondo del proyecto ('+WALL_NAT.w+'×'+WALL_NAT.h+' px).';
+  }else{
+    h.textContent = 'Subí acá el fondo original de WhatsApp, o guardalo como "fondo.png" junto a este archivo para que se cargue solo.';
+  }
+}
 
 $('#cAvatar').addEventListener('change', e => {
   const f = e.target.files && e.target.files[0]; if(!f) return;
@@ -1042,7 +1291,12 @@ function fillSettings(){
   $('#pW').value = S.ui.w||400;
   $('#pH').value = S.ui.h||844;
   $('#uNav').checked = !!S.ui.nav;
-  $('#uDood').checked = !!S.ui.doodles;
+  $('#uWall').value = S.ui.wall || 'doodles';
+  $('#uBg').value = S.ui.bg || '#0e1f28';
+  $('#uBgHex').value = S.ui.bg || '#0e1f28';
+  $('#uDop').value = Math.round((S.ui.dop==null?0.09:S.ui.dop)*200);
+  $('#uWallFit').value = S.ui.wallFit || 'tile';
+  $('#uWallScale').value = S.ui.wallScale || 100;
 }
 
 /* --- archivo --- */
@@ -1061,13 +1315,20 @@ $('#bLoad').addEventListener('change', e => {
     try{
       const o = JSON.parse(ev.target.result);
       if(!o.messages) throw 0;
-      S = o; openId = null; fillSettings(); render(); toast('Chat cargado');
+      S = normalize(o); openId = null; fillSettings(); render();
+      measureWall(wallpaperSrc(), () => { renderPhone(); wallHint(); });
+      toast('Chat cargado');
     }catch(_){ toast('El archivo no es válido'); }
   };
   r.readAsText(f);
   e.target.value = '';
 });
-$('#bDemo').addEventListener('click', () => { S = demo(); openId=null; fillSettings(); render(); toast('Chat de ejemplo cargado'); });
+$('#bDemo').addEventListener('click', () => {
+  S = demo();
+  if(!AUTO_WALL) S.ui.wall = 'doodles';
+  openId = null; fillSettings(); render(); wallHint();
+  toast('Chat de ejemplo cargado');
+});
 $('#bClear').addEventListener('click', () => {
   if(!confirm('¿Borrar todos los mensajes?')) return;
   S.messages = []; openId = null; render();
@@ -1169,6 +1430,9 @@ $('#bPngFull').addEventListener('click', () => capture(true));
 fillSettings();
 render();
 applyZoom();
+wallHint();
+if(S.ui.wallImg) measureWall(S.ui.wallImg, () => { renderPhone(); wallHint(); });
+else loadDefaultWallpaper().then(wallHint);
 window.addEventListener('resize', fixMeta);
 </script>
 </body>
