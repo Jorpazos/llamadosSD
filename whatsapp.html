@@ -207,8 +207,14 @@ input[type=range]{width:100%;accent-color:var(--ui-accent);cursor:pointer;height
 .wa-head .st{font-size:12.5px;color:var(--wa-icon);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .wa-head .acts{display:flex;align-items:center;gap:29px;padding-left:16px;flex-shrink:0}
 .wa-head .acts svg{fill:var(--wa-text);display:block}
+.wa-head .acts .vid,
+.wa-head .acts .tel{
+  fill:none;stroke:var(--wa-text);stroke-width:1.85;
+  stroke-linecap:round;stroke-linejoin:round;
+}
 .wa-head .acts .vid{width:24px;height:24px}
-.wa-head .acts .tel{width:22px;height:22px}
+.wa-head .acts .vid .fil{fill:var(--wa-text);stroke:none}
+.wa-head .acts .tel{width:21px;height:21px}
 .wa-head .acts .kebab{width:5px;height:21px}
 
 /* --- chat --- */
@@ -566,8 +572,11 @@ input[type=range]{width:100%;accent-color:var(--ui-accent);cursor:pointer;height
             <div class="st" id="hSub" style="display:none"></div>
           </div>
           <div class="acts">
-            <svg class="vid" viewBox="0 0 24 24"><path d="M3.5 5.5h11.2a2 2 0 0 1 2 2v2.1l4.8-3.2a.6.6 0 0 1 .9.5v10.2a.6.6 0 0 1-.9.5l-4.8-3.2v2.1a2 2 0 0 1-2 2H3.5a2 2 0 0 1-2-2v-11a2 2 0 0 1 2-2z"/></svg>
-            <svg class="tel" viewBox="0 0 24 24"><path d="M6.9 10.9a15.6 15.6 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1.1-.2 1.2.4 2.4.6 3.7.6.6 0 1.1.5 1.1 1.1v3.5c0 .6-.5 1.1-1.1 1.1C11.1 21.4 3 13.3 3 3.3c0-.6.5-1.1 1.1-1.1h3.5c.6 0 1.1.5 1.1 1.1 0 1.3.2 2.5.6 3.7.1.4 0 .8-.2 1.1l-2.2 2.2z"/></svg>
+            <svg class="vid" viewBox="0 0 24 24">
+              <rect x="1.6" y="6.1" width="14.6" height="11.8" rx="3.2"/>
+              <path class="fil" d="M17.3 12 22.1 8.4v7.2z"/>
+            </svg>
+            <svg class="tel" viewBox="0 0 24 24"><path d="M8.1 3.4H4.6a1.6 1.6 0 0 0-1.6 1.7c.4 8.2 7.6 15.4 15.8 15.8a1.6 1.6 0 0 0 1.7-1.6v-3.5a1.1 1.1 0 0 0-.9-1.1l-3.2-.6a1.1 1.1 0 0 0-1 .3l-1.5 1.5a14.4 14.4 0 0 1-5.8-5.8l1.5-1.5a1.1 1.1 0 0 0 .3-1l-.6-3.2a1.1 1.1 0 0 0-1.2-1z"/></svg>
             <svg class="kebab" viewBox="0 0 5 21"><circle cx="2.5" cy="2.5" r="2.1"/><circle cx="2.5" cy="10.5" r="2.1"/><circle cx="2.5" cy="18.5" r="2.1"/></svg>
           </div>
         </div>
