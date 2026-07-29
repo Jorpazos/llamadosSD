@@ -335,27 +335,34 @@ input[type=range]{width:100%;accent-color:var(--ui-accent);cursor:pointer;height
 .sysbox.enc{background:#182229;color:#ffd279;font-size:11.6px}
 
 /* barra de escritura */
-.wa-foot{flex-shrink:0;padding:6px 11px 8px;display:flex;align-items:center;gap:7px;background:var(--wa-chat)}
+.wa-foot{
+  flex-shrink:0;padding:6px 11px 8px 17px;display:flex;align-items:center;
+  gap:5px;background:var(--wa-chat);
+}
 .inputbar{
   flex:1;background:var(--wa-input);border-radius:24px;display:flex;align-items:center;
-  gap:10px;padding:0 13px;height:42px;
+  padding:0 16px 0 10px;height:42px;
 }
-.inputbar .ph{flex:1;color:#8696a0;font-size:16.5px;margin-left:-4px}
-.inputbar .stk .eyes{stroke-width:2.1}
+.inputbar .ph{flex:1;color:#8696a0;font-size:17px;margin-left:5px}
 .inputbar .caret{
-  width:2px;height:21px;background:#25d366;border-radius:1px;flex-shrink:0;display:block;
+  width:2.2px;height:22px;background:#25d366;border-radius:1px;flex-shrink:0;display:block;
+  margin-left:15px;
 }
 .inputbar svg{flex-shrink:0;display:block}
 .inputbar .ln{
-  width:22px;height:22px;fill:none;stroke:#8696a0;stroke-width:1.7;
-  stroke-linecap:round;stroke-linejoin:round;
+  fill:none;stroke:#8696a0;stroke-linecap:round;stroke-linejoin:round;
 }
-.inputbar .clip{width:20px;height:20px;transform:rotate(20deg)}
+/* el grosor se compensa por tamaño para que todos se vean igual de gruesos */
+.inputbar .stk {width:22px;height:22px;stroke-width:2.15}
+.inputbar .stk .eyes{stroke-width:2.6}
+.inputbar .clip{width:19px;height:19px;stroke-width:2.45;transform:rotate(20deg)}
+.inputbar .cam {width:23px;height:23px;stroke-width:2.05}
+.inputbar .tools{display:flex;align-items:center;gap:32px;flex-shrink:0}
 .inputbar .ai{width:18px;height:18px;fill:#8696a0}
 .micbtn{
-  width:52px;height:52px;border-radius:50%;background:#21c063;display:grid;place-items:center;flex-shrink:0;
+  width:55px;height:55px;border-radius:50%;background:#21c063;display:grid;place-items:center;flex-shrink:0;
 }
-.micbtn svg{width:24px;height:24px;fill:#0b141a}
+.micbtn svg{width:25px;height:25px;fill:#0b141a}
 
 /* nav android */
 .navbar{
@@ -593,12 +600,14 @@ input[type=range]{width:100%;accent-color:var(--ui-accent);cursor:pointer;height
             </svg>
             <span class="caret"></span>
             <span class="ph">Mensaje</span>
-            <svg class="ln clip" viewBox="0 0 24 24"><path d="M17.6 7v9.6a5.6 5.6 0 0 1-11.2 0V6.2a3.6 3.6 0 0 1 7.2 0v10.2a1.7 1.7 0 0 1-3.4 0V7.4"/></svg>
-            <svg class="ln cam" viewBox="0 0 24 24">
-              <path d="M3.2 7.4h3.3l1.6-2.4h7.8l1.6 2.4h3.3a1.5 1.5 0 0 1 1.5 1.5v9.1a1.5 1.5 0 0 1-1.5 1.5H3.2a1.5 1.5 0 0 1-1.5-1.5V8.9a1.5 1.5 0 0 1 1.5-1.5z"/>
-              <path d="M12 9.7a3.8 3.8 0 1 1 0 7.6 3.8 3.8 0 0 1 0-7.6z"/>
-            </svg>
-            <svg class="ai" viewBox="0 0 24 24"><path d="M12 2l2.2 5.8L20 10l-5.8 2.2L12 18l-2.2-5.8L4 10l5.8-2.2L12 2zm7 10l.9 2.4 2.4.9-2.4.9-.9 2.4-.9-2.4-2.4-.9 2.4-.9.9-2.4z"/></svg>
+            <span class="tools">
+              <svg class="ln clip" viewBox="0 0 24 24"><path d="M17.6 7v9.6a5.6 5.6 0 0 1-11.2 0V6.2a3.6 3.6 0 0 1 7.2 0v10.2a1.7 1.7 0 0 1-3.4 0V7.4"/></svg>
+              <svg class="ln cam" viewBox="0 0 24 24">
+                <path d="M3.2 7.4h3.3l1.6-2.4h7.8l1.6 2.4h3.3a1.5 1.5 0 0 1 1.5 1.5v9.1a1.5 1.5 0 0 1-1.5 1.5H3.2a1.5 1.5 0 0 1-1.5-1.5V8.9a1.5 1.5 0 0 1 1.5-1.5z"/>
+                <path d="M12 9.7a3.8 3.8 0 1 1 0 7.6 3.8 3.8 0 0 1 0-7.6z"/>
+              </svg>
+              <svg class="ai" viewBox="0 0 24 24"><path d="M12 2l2.2 5.8L20 10l-5.8 2.2L12 18l-2.2-5.8L4 10l5.8-2.2L12 2zm7 10l.9 2.4 2.4.9-2.4.9-.9 2.4-.9-2.4-2.4-.9 2.4-.9.9-2.4z"/></svg>
+            </span>
           </div>
           <div class="micbtn">
             <svg viewBox="0 0 24 24"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5.9-3c0 3-2.5 5.4-5.4 5.4S7.1 15 7.1 12H5.4c0 3.6 2.7 6.6 6.1 7.1V22h2.2v-2.9c3.4-.5 6.1-3.5 6.1-7.1h-1.9z"/></svg>
