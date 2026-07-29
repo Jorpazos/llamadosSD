@@ -174,15 +174,16 @@ input[type=range]{width:100%;accent-color:var(--ui-accent);cursor:pointer;height
   height:30px;background:var(--wa-status);color:#fff;flex-shrink:0;
   display:flex;align-items:center;justify-content:space-between;padding:0 11px;font-size:12.5px;
 }
-.sb-l{display:flex;align-items:center;gap:6px}
+.sb-l{display:flex;align-items:center;gap:7px}
 .sb-l .t{font-weight:500;letter-spacing:.2px}
-.sb-r{display:flex;align-items:center;gap:5px}
+.sb-l .wa{width:13px;height:13px;fill:#fff;display:block}
+.sb-r{display:flex;align-items:center;gap:7px}
 .sb-r svg{width:13px;height:13px;fill:#fff;display:block}
 .batt{
-  min-width:20px;height:14px;border-radius:4px;background:#e04b4b;color:#fff;font-size:9px;
-  font-weight:700;display:grid;place-items:center;padding:0 3px;letter-spacing:-.2px;
+  min-width:21px;height:14px;border-radius:4.5px;background:#fff;color:#000;font-size:9px;
+  font-weight:700;display:grid;place-items:center;padding:0 3.5px;letter-spacing:-.2px;
 }
-.dots{display:flex;gap:2px;align-items:center}
+.dots{display:flex;gap:2.5px;align-items:center}
 .dots i{width:3px;height:3px;border-radius:50%;background:#fff;display:block}
 
 /* --- header --- */
@@ -338,11 +339,13 @@ input[type=range]{width:100%;accent-color:var(--ui-accent);cursor:pointer;height
 
 /* nav android */
 .navbar{
-  height:34px;background:var(--wa-status);flex-shrink:0;display:flex;align-items:center;
-  justify-content:space-around;padding:0 60px;
+  height:42px;background:var(--wa-status);flex-shrink:0;display:flex;align-items:center;
+  justify-content:space-around;padding:0 56px;
 }
-.navbar svg{width:14px;height:14px;fill:none;stroke:#e9edef;stroke-width:1.6}
-.navbar .tri{fill:#e9edef;stroke:none;width:12px;height:12px}
+.navbar svg{display:block;fill:#ffffff}
+.navbar .sq{width:14px;height:14px}
+.navbar .rng{width:18px;height:18px;fill:none;stroke:#ffffff;stroke-width:2}
+.navbar .tri{width:16px;height:16px}
 
 @media (max-width:1080px){
   .app{grid-template-columns:340px 1fr}
@@ -526,7 +529,7 @@ input[type=range]{width:100%;accent-color:var(--ui-accent);cursor:pointer;height
         <div class="statusbar" id="statusbar">
           <div class="sb-l">
             <span class="t" id="sbTime">1:15</span>
-            <svg viewBox="0 0 24 24" style="width:12px;height:12px;fill:#fff"><path d="M12 3v10.6a4 4 0 1 0 2 3.4V7h4V3h-6z"/></svg>
+            <svg class="wa" viewBox="0 0 24 24"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.4A10 10 0 1 0 12 2zm5.3 14.2c-.2.6-1.2 1.2-1.7 1.2-.5.1-1 .1-1.6-.1-.4-.1-.9-.3-1.5-.6-2.6-1.1-4.3-3.8-4.4-4-.1-.2-1-1.4-1-2.6s.6-1.8.9-2.1c.2-.2.5-.3.7-.3h.5c.2 0 .4 0 .6.5s.8 2 .9 2.1c.1.1.1.3 0 .5s-.1.3-.3.5l-.4.4c-.1.1-.3.3-.1.6.1.3.7 1.2 1.5 1.9 1 .9 1.8 1.1 2.1 1.3.3.1.4.1.6-.1s.7-.8.9-1.1c.2-.3.4-.2.6-.1l1.9.9c.2.1.4.2.5.3.1.2.1.7-.1 1.3z"/></svg>
             <span class="dots"><i></i><i></i><i></i></span>
           </div>
           <div class="sb-r">
@@ -568,9 +571,9 @@ input[type=range]{width:100%;accent-color:var(--ui-accent);cursor:pointer;height
         </div>
 
         <div class="navbar" id="navbar">
-          <svg viewBox="0 0 14 14"><rect x="1.5" y="1.5" width="11" height="11" rx="1.5"/></svg>
-          <svg viewBox="0 0 14 14"><circle cx="7" cy="7" r="5.5"/></svg>
-          <svg class="tri" viewBox="0 0 12 12"><path d="M9 1L2 6l7 5V1z"/></svg>
+          <svg class="sq"  viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2.6"/></svg>
+          <svg class="rng" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7.4"/></svg>
+          <svg class="tri" viewBox="0 0 16 16"><path d="M12.5 1.4 2.6 8l9.9 6.6z"/></svg>
         </div>
 
       </div>
@@ -894,9 +897,8 @@ function renderPhone(){
   $('#sbTime').textContent = S.status.time || '';
   const b = $('#sbBatt');
   b.textContent = (S.status.batt==null?'':S.status.batt);
-  b.style.background = S.status.battRed ? '#e04b4b' : 'transparent';
-  b.style.border = S.status.battRed ? '0' : '1.4px solid #fff';
-  b.style.color = '#fff';
+  b.style.background = S.status.battRed ? '#e5484d' : '#ffffff';
+  b.style.color      = S.status.battRed ? '#ffffff' : '#000000';
 
   // teléfono
   const ph = $('#phone');
